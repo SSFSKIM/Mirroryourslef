@@ -1,8 +1,8 @@
+
 import React, { useEffect } from "react";
-import { useAuth } from "utils/AuthContext";
+import { useAuthStore } from "utils/auth";
 import { UserProfile } from "components/UserProfile";
-import { AuthProvider } from "utils/AuthContext";
-import { YouTubeSyncButton } from "components/YouTubeSyncButton";
+import YouTubeSyncButton from "components/YouTubeSyncButton";
 import { YouTubeDataPreview } from "components/YouTubeDataPreview";
 import { WatchTimeHeatMap } from "components/WatchTimeHeatMap";
 import { VideoLengthDistribution } from "components/VideoLengthDistribution";
@@ -11,6 +11,8 @@ import { CategoryDistribution } from "components/CategoryDistribution";
 import { WatchThroughPercentage } from "components/WatchThroughPercentage";
 
 export default function Dashboard() {
+  const { user } = useAuthStore();
+
   useEffect(() => {
     // Initialize Firebase on component mount
     import("utils/auth").then(() => {
@@ -18,10 +20,7 @@ export default function Dashboard() {
     });
   }, []);
   
-  const { isAuthenticated } = useAuth();
-
   return (
-    <AuthProvider>
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -82,6 +81,5 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
-    </AuthProvider>
   );
 }
