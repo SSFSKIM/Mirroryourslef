@@ -1,5 +1,6 @@
 
 
+
 import React, { useEffect } from "react";
 import { useAuthStore } from "utils/auth";
 import { UserProfile } from "components/UserProfile";
@@ -42,13 +43,8 @@ export default function Dashboard() {
         {/* YouTube Sync Section */}
         <div className="mt-8 mb-8">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Data Synchronization</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <YouTubeSyncButton />
-            </div>
-            <div>
-              <YouTubeDataPreview />
-            </div>
+          <div className="mb-6">
+            <YouTubeSyncButton />
           </div>
         </div>
         

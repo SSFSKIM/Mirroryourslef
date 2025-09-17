@@ -1,16 +1,55 @@
 
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Users, Video } from 'lucide-react';
-import useDataStore from 'utils/dataStore';
+import { Clock, Users, Video, TrendingUp } from 'lucide-react';
+import brain from 'brain';
 
 interface LikedVideosStatsProps {
   className?: string;
 }
 
+interface AnalyticsData {
+  length_stats?: {
+    average_length: number;
+  };
+  channel_stats?: {
+    total_unique_channels: number;
+  };
+  shorts_analysis?: {
+    shorts_percentage: number;
+    total_shorts: number;
+    total_regular: number;
+  };
+}
+
 const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
-  const { analytics, isAnalyticsLoading, analyticsError } = useDataStore();
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const response = await brain.get_analytics({ sample_size: 100 });
+        const data = await response.json();
+        
+        if (data.success && data.analytics) {
+          setAnalytics(data.analytics);
+          setError(null);
+        } else {
+          setError('No analytics data available. Please sync your liked videos first.');
+        }
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError('Failed to load analytics data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) {
@@ -26,7 +65,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
     }
   };
 
-  if (isAnalyticsLoading) {
+  if (loading) {
     return (
       <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
         {[1, 2, 3].map((i) => (
@@ -45,19 +84,19 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
     );
   }
 
-  if (analyticsError || !analytics) {
+  if (error) {
     return (
       <div className={`p-4 text-center text-gray-500 ${className}`}>
-        <p>{analyticsError?.message || 'No analytics data available. Please sync your liked videos first.'}</p>
+        <p>{error}</p>
       </div>
     );
   }
 
-  const averageLength = analytics.length_stats?.average_length || 0;
-  const totalChannels = analytics.channel_stats?.total_unique_channels || 0;
-  const shortsPercentage = analytics.shorts_analysis?.shorts_percentage || 0;
-  const totalShorts = analytics.shorts_analysis?.total_shorts || 0;
-  const totalRegular = analytics.shorts_analysis?.total_regular || 0;
+  const averageLength = analytics?.length_stats?.average_length || 0;
+  const totalChannels = analytics?.channel_stats?.total_unique_channels || 0;
+  const shortsPercentage = analytics?.shorts_analysis?.shorts_percentage || 0;
+  const totalShorts = analytics?.shorts_analysis?.total_shorts || 0;
+  const totalRegular = analytics?.shorts_analysis?.total_regular || 0;
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>

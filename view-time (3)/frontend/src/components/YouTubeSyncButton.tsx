@@ -1,14 +1,16 @@
 
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { Youtube, Download, AlertCircle, CheckCircle, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUserGuardContext } from 'app';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuthStore } from 'utils/auth';
+import { Loader2, Youtube, CheckCircle, AlertCircle, BarChart3 } from 'lucide-react';
 import { firebaseAuth } from 'app';
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  getAdditionalUserInfo 
+} from 'firebase/auth';
 import brain from 'brain';
-import useDataStore from 'utils/dataStore';
 
 interface SyncStatus {
   lastSync?: string;
@@ -26,15 +28,19 @@ const SAMPLE_SIZE_OPTIONS = [
   { value: 250, label: "250 videos" }
 ];
 
-const YouTubeSyncButton: React.FC = () => {
-  const { user } = useUserGuardContext();
-  const { refreshData } = useDataStore();
+export default function YouTubeSyncButton() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({});
   const [needsAuth, setNeedsAuth] = useState(false);
   const [selectedSampleSize, setSelectedSampleSize] = useState<number>(100);
+  const { user } = useAuthStore();
 
-  const checkSyncStatus = useCallback(async () => {
+  // Check current sync status on component mount
+  useEffect(() => {
+    checkSyncStatus();
+  }, [user]);
+
+  const checkSyncStatus = async () => {
     if (!user) {
       setNeedsAuth(true);
       return;
@@ -59,12 +65,7 @@ const YouTubeSyncButton: React.FC = () => {
       console.log('Need to authenticate with YouTube:', error);
       setNeedsAuth(true);
     }
-  }, [user]);
-
-  // Check current sync status on component mount
-  useEffect(() => {
-    checkSyncStatus();
-  }, [checkSyncStatus]);
+  };
 
   const authenticateWithYouTube = async () => {
     try {
@@ -206,15 +207,8 @@ const YouTubeSyncButton: React.FC = () => {
       console.log('Liked videos sync completed successfully:', data);
       
       // Refresh sync status to get updated analytics info
-      setTimeout(async () => {
-        await checkSyncStatus();
-        // Also refresh the dataStore analytics for dashboard components
-        try {
-          await refreshData();
-          console.log('Dashboard analytics refreshed after sync');
-        } catch (error) {
-          console.error('Failed to refresh dashboard analytics:', error);
-        }
+      setTimeout(() => {
+        checkSyncStatus();
       }, 1000);
       
     } catch (error: any) {
@@ -338,6 +332,4 @@ const YouTubeSyncButton: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default YouTubeSyncButton;
+}
