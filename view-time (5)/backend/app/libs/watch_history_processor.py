@@ -42,6 +42,14 @@ DEFAULT_EVENT_DURATION_SECONDS = 300
 MAX_GAP_CONTRIBUTION_SECONDS = 900
 SHORT_ESTIMATED_SECONDS = 45
 
+SESSION_DURATION_BUCKETS = [
+    ("<5 min", 0, 5),
+    ("5-15 min", 5, 15),
+    ("15-30 min", 15, 30),
+    ("30-60 min", 30, 60),
+    (">60 min", 60, None),
+]
+
 
 class WatchHistoryProcessor:
     """Parses Google Takeout exports and produces aggregated analytics."""
@@ -190,6 +198,11 @@ class WatchHistoryProcessor:
                 shorts_share=0.0,
                 daily_average_minutes=0.0,
                 weekly_minutes=0.0,
+                session_distribution={label: 0 for label, _lower, _upper in SESSION_DURATION_BUCKETS},
+                longest_session_minutes=0.0,
+                shorts_total_minutes=0.0,
+                algorithmic_minutes=0.0,
+                intentional_minutes=0.0,
             )
 
         # Sort ascending for sessionisation
@@ -218,6 +231,13 @@ class WatchHistoryProcessor:
         heatmap = self._build_heatmap(events)
         daily_distribution = self._daily_distribution(events)
         shorts_share = sum(1 for event in events if event.is_short) / total_events
+        session_distribution = self._session_distribution(sessions)
+        longest_session_minutes = (
+            max((session.estimated_duration_seconds for session in sessions), default=0) / 60
+        )
+        shorts_total_minutes = (
+            sum(session.shorts_count for session in sessions) * SHORT_ESTIMATED_SECONDS / 60
+        )
 
         date_range_days = (
             (ascending_events[-1].watched_at.date() - ascending_events[0].watched_at.date()).days + 1
@@ -227,6 +247,17 @@ class WatchHistoryProcessor:
         )
         weeks = max(date_range_days / 7, 1)
         weekly_minutes = estimated_total_seconds / 60 / weeks
+
+        algorithmic_minutes = (
+            estimated_total_seconds / 60 * (algorithmic_count / total_events)
+            if total_events
+            else 0.0
+        )
+        intentional_minutes = (
+            estimated_total_seconds / 60 * (intentional_count / total_events)
+            if total_events
+            else 0.0
+        )
 
         return WatchHistoryAnalytics(
             user_id=user_id,
@@ -246,6 +277,11 @@ class WatchHistoryProcessor:
             shorts_share=round(shorts_share, 3),
             daily_average_minutes=round(daily_average_minutes, 2),
             weekly_minutes=round(weekly_minutes, 2),
+            session_distribution=session_distribution,
+            longest_session_minutes=round(longest_session_minutes, 2),
+            shorts_total_minutes=round(shorts_total_minutes, 2),
+            algorithmic_minutes=round(algorithmic_minutes, 2),
+            intentional_minutes=round(intentional_minutes, 2),
         )
 
     def _build_sessions(self, user_id: str, events: List[WatchEvent]) -> List[WatchSession]:
@@ -354,6 +390,21 @@ class WatchHistoryProcessor:
         for event in events:
             counts[event.watched_at.date().isoformat()] += 1
         return dict(counts)
+
+    def _session_distribution(self, sessions: List[WatchSession]) -> Dict[str, int]:
+        distribution: Dict[str, int] = defaultdict(int)
+        for session in sessions:
+            duration_minutes = session.estimated_duration_seconds / 60
+            for label, lower, upper in SESSION_DURATION_BUCKETS:
+                if duration_minutes < lower:
+                    continue
+                if upper is None or duration_minutes < upper:
+                    distribution[label] += 1
+                    break
+        # Ensure all buckets present to keep UI stable
+        for label, _lower, _upper in SESSION_DURATION_BUCKETS:
+            distribution.setdefault(label, 0)
+        return dict(distribution)
 
     def serialise_events(self, events: List[WatchEvent]) -> List[Dict[str, Any]]:
         serialised: List[Dict[str, Any]] = []

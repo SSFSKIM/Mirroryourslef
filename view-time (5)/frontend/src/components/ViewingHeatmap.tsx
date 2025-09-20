@@ -47,6 +47,8 @@ export const ViewingHeatmap: React.FC<ViewingHeatmapProps> = ({ className = "" }
     return null;
   }
 
+  const hasHeatmap = analytics.heatmap && Object.keys(analytics.heatmap).length > 0;
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -54,36 +56,42 @@ export const ViewingHeatmap: React.FC<ViewingHeatmapProps> = ({ className = "" }
         <CardDescription>When you watch the most. Darker cells indicate heavier viewing.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <div className="min-w-[768px]">
-          <div className="grid grid-cols-[80px_repeat(24,1fr)] gap-1 text-xs">
-            <div />
-            {HOURS.map((hour) => (
-              <div key={hour} className="text-center text-muted-foreground">
-                {hour}
-              </div>
-            ))}
-            {DAY_LABELS.map((label, index) => (
-              <React.Fragment key={label}>
-                <div className="flex items-center justify-start pr-2 font-medium">{label}</div>
-                {HOURS.map((hour) => {
-                  const key = `${index}-${hour}`;
-                  const count = cells.get(key) ?? 0;
-                  const background = heatColor(count, maxValue);
-                  return (
-                    <div
-                      key={key}
-                      className="flex h-6 items-center justify-center rounded"
-                      style={{ backgroundColor: background }}
-                      title={`${label} @ ${hour}:00 · ${count} views`}
-                    >
-                      {count > 0 ? count : ""}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+        {!hasHeatmap ? (
+          <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            We need a bit more history to surface time-of-day insights.
           </div>
-        </div>
+        ) : (
+          <div className="min-w-[768px]">
+            <div className="grid grid-cols-[80px_repeat(24,1fr)] gap-1 text-xs">
+              <div />
+              {HOURS.map((hour) => (
+                <div key={hour} className="text-center text-muted-foreground">
+                  {hour}
+                </div>
+              ))}
+              {DAY_LABELS.map((label, index) => (
+                <React.Fragment key={label}>
+                  <div className="flex items-center justify-start pr-2 font-medium">{label}</div>
+                  {HOURS.map((hour) => {
+                    const key = `${index}-${hour}`;
+                    const count = cells.get(key) ?? 0;
+                    const background = heatColor(count, maxValue);
+                    return (
+                      <div
+                        key={key}
+                        className="flex h-6 items-center justify-center rounded"
+                        style={{ backgroundColor: background }}
+                        title={`${label} @ ${hour}:00 · ${count} views`}
+                      >
+                        {count > 0 ? count : ""}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

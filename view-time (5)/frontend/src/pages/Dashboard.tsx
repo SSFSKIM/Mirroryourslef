@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useAuthStore } from "utils/auth";
 import { UserProfile } from "components/UserProfile";
 import YouTubeSyncButton from "components/YouTubeSyncButton";
-import { YouTubeDataPreview } from "components/YouTubeDataPreview";
 import LikedVideosStats from "components/LikedVideosStats";
 import ShortsVsRegularChart from "components/ShortsVsRegularChart";
 import { WatchTimeHeatMap } from "components/WatchTimeHeatMap";
@@ -15,11 +14,14 @@ import { WatchHistoryHighlights } from "components/WatchHistoryHighlights";
 import { ViewingHeatmap } from "components/ViewingHeatmap";
 import { RepeatWatchList } from "components/RepeatWatchList";
 import { InAppNudges } from "components/InAppNudges";
+import { RecommendationBreakdown } from "components/RecommendationBreakdown";
+import { SessionDurationChart } from "components/SessionDurationChart";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
   const { loadStatus, loadAnalytics, status, analytics } = useWatchHistoryStore();
+  const hasWatchHistory = Boolean(status?.total_events && status.total_events > 0 && analytics);
 
   useEffect(() => {
     // Initialize Firebase on component mount
@@ -109,11 +111,19 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold tracking-tight">Watch History Insights</h2>
           <WatchHistoryUploadCard />
           <WatchHistoryHighlights />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ViewingHeatmap className="w-full" />
-            <InAppNudges className="w-full" />
-          </div>
-          <RepeatWatchList />
+          {hasWatchHistory && (
+            <>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <SessionDurationChart className="w-full" />
+                <RecommendationBreakdown className="w-full" />
+              </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <ViewingHeatmap className="w-full" />
+                <InAppNudges className="w-full" />
+              </div>
+              <RepeatWatchList />
+            </>
+          )}
         </div>
       </main>
     </div>

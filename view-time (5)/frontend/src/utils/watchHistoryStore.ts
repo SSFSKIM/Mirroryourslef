@@ -4,11 +4,18 @@ import type {
   DeleteWatchHistoryData,
   GetWatchHistoryAnalyticsData,
   GetWatchHistoryStatusData,
-  WatchHistoryStatus,
-  WatchHistoryUploadResponse,
+  UploadWatchHistoryTakeoutData,
 } from "types";
 
-type WatchHistoryAnalytics = Record<string, any> | null;
+type WatchHistoryStatus = GetWatchHistoryStatusData;
+
+type WatchHistoryAnalytics = (GetWatchHistoryAnalyticsData & {
+  session_distribution?: Record<string, number>;
+  longest_session_minutes?: number;
+  shorts_total_minutes?: number;
+  algorithmic_minutes?: number;
+  intentional_minutes?: number;
+}) | null;
 
 type WatchHistoryState = {
   status: WatchHistoryStatus | null;
@@ -18,8 +25,10 @@ type WatchHistoryState = {
   isUploading: boolean;
   error: string | null;
   uploadMessage: string | null;
+  lastUpdatedAt: string | null;
   loadStatus: () => Promise<void>;
   loadAnalytics: () => Promise<void>;
+  refresh: () => Promise<void>;
   uploadTakeout: (file: File) => Promise<void>;
   deleteHistory: () => Promise<void>;
 };
@@ -32,11 +41,20 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
   isUploading: false,
   error: null,
   uploadMessage: null,
+  lastUpdatedAt: null,
 
   loadStatus: async () => {
     set({ isLoadingStatus: true, error: null });
     try {
       const response = await brain.get_watch_history_status();
+      if (!response.ok) {
+        if (response.status === 404) {
+          set({ status: null, isLoadingStatus: false });
+          return;
+        }
+        throw new Error(`Failed to load watch history status (${response.status})`);
+      }
+
       const statusData: GetWatchHistoryStatusData = await response.json();
       set({ status: statusData, isLoadingStatus: false });
     } catch (error) {
@@ -49,27 +67,42 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
     set({ isLoadingAnalytics: true, error: null });
     try {
       const response = await brain.get_watch_history_analytics();
+      if (!response.ok) {
+        if (response.status === 404) {
+          set({ analytics: null, isLoadingAnalytics: false });
+          return;
+        }
+        throw new Error(`Failed to load watch history analytics (${response.status})`);
+      }
+
       const data: GetWatchHistoryAnalyticsData = await response.json();
-      set({ analytics: data.analytics ?? null, isLoadingAnalytics: false });
+      set({
+        analytics: data ?? null,
+        isLoadingAnalytics: false,
+        lastUpdatedAt: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Failed to load watch history analytics", error);
       set({ error: (error as Error).message, isLoadingAnalytics: false });
     }
   },
 
+  refresh: async () => {
+    await Promise.allSettled([get().loadStatus(), get().loadAnalytics()]);
+  },
+
   uploadTakeout: async (file: File) => {
     set({ isUploading: true, uploadMessage: null, error: null });
     try {
       const response = await brain.upload_watch_history_takeout({ file });
-      const data: WatchHistoryUploadResponse = await response.json();
+      const data: UploadWatchHistoryTakeoutData = await response.json();
 
       if (!data.success) {
         throw new Error(data.message || "Failed to process watch history file");
       }
 
-      set({ analytics: data.analytics ?? null, uploadMessage: data.message });
-
-      await Promise.allSettled([get().loadStatus(), get().loadAnalytics()]);
+      set({ uploadMessage: data.message });
+      await get().refresh();
     } catch (error) {
       console.error("Failed to upload watch history", error);
       set({ error: (error as Error).message });
@@ -86,7 +119,7 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
       if (!data.success) {
         throw new Error(data.message || "Failed to delete watch history");
       }
-      set({ analytics: null, status: null, uploadMessage: data.message });
+      set({ analytics: null, status: null, uploadMessage: data.message, lastUpdatedAt: null });
     } catch (error) {
       console.error("Failed to delete watch history", error);
       set({ error: (error as Error).message });

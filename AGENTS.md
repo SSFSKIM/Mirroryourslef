@@ -66,6 +66,9 @@ src/app/apis/
    - Daily/weekly/monthly usage charts
    - Most watched channels and categories
    - Watch time heatmap
+   - Viewing session analysis, distribution buckets, and longest-session detection
+   - Algorithmic vs intentional viewing breakdown with recommendation sources
+   - Repeat viewing leaderboard derived from watch history uploads
    - Video completion rates
    - Liked videos analytics
 

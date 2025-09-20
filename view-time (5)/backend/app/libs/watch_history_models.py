@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -66,12 +66,17 @@ class WatchHistoryAnalytics:
     
     # Repeat viewing
     repeat_views: List[RepeatView]
-    
+
     # Time patterns
     heatmap: Dict[str, Dict[str, int]]  # weekday -> hour -> count
     daily_distribution: Dict[str, int]  # date -> count
-    
+
     # Summary metrics
     shorts_share: float
     daily_average_minutes: float
     weekly_minutes: float
+    session_distribution: Dict[str, int]
+    longest_session_minutes: float
+    shorts_total_minutes: float
+    algorithmic_minutes: float
+    intentional_minutes: float

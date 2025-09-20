@@ -4,13 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
-interface RepeatWatch {
-  title: string;
-  channel: string;
-  timesWatched: number;
-  lastWatched: string;
-}
-
 interface RepeatWatchListProps {
   className?: string;
 }
@@ -18,19 +11,27 @@ interface RepeatWatchListProps {
 export const RepeatWatchList: React.FC<RepeatWatchListProps> = ({ className = "" }) => {
   const { analytics } = useWatchHistoryStore();
 
-  const repeatWatches: RepeatWatch[] = React.useMemo(() => {
+  const repeatWatches = React.useMemo(() => {
     if (!analytics?.repeat_views) {
       return [];
     }
 
-    // Convert analytics.repeat_views to RepeatWatch format
-    return analytics.repeat_views.map((item: any) => ({
-      title: item.title || "Unknown Video",
-      channel: item.channel || "Unknown Channel",
-      timesWatched: item.times_watched || 0,
-      lastWatched: item.last_watched || new Date().toISOString(),
-    })).slice(0, 10); // Show top 10
+    return (analytics.repeat_views as any[])
+      .map((item) => ({
+        title: item.title || "Unknown Video",
+        channel: item.channel_title || "Unknown Channel",
+        timesWatched: item.watch_count || 0,
+        lastWatched: item.last_watched_at || item.last_watched || new Date().toISOString(),
+        videoId: item.video_id || `${item.title}-${item.channel_title}`,
+      }))
+      .filter((item) => item.timesWatched > 1)
+      .sort((a, b) => b.timesWatched - a.timesWatched)
+      .slice(0, 10);
   }, [analytics]);
+
+  if (!analytics) {
+    return null;
+  }
 
   return (
     <Card className={className}>
@@ -48,14 +49,14 @@ export const RepeatWatchList: React.FC<RepeatWatchListProps> = ({ className = ""
           <div className="text-center py-8">
             <Repeat className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
             <p className="text-sm text-muted-foreground">
-              Upload your watch history to discover your most rewatched content.
+              We did not detect any repeat viewing yet. Upload more history or refresh after your next watch streak.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {repeatWatches.map((watch, index) => (
               <div
-                key={`${watch.title}-${index}`}
+                key={`${watch.videoId}-${index}`}
                 className="flex items-start justify-between p-3 rounded-lg border bg-muted/20"
               >
                 <div className="flex-1 min-w-0">
@@ -75,7 +76,7 @@ export const RepeatWatchList: React.FC<RepeatWatchListProps> = ({ className = ""
                 <div className="flex flex-col items-end gap-2">
                   <Badge variant="secondary" className="text-xs">
                     <Clock className="h-3 w-3 mr-1" />
-                    {watch.timesWatched}x
+                    {watch.timesWatched}×
                   </Badge>
                 </div>
               </div>

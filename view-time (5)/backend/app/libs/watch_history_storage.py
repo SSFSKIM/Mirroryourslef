@@ -70,6 +70,11 @@ class WatchHistoryStorage:
                 "shorts_share": analytics.shorts_share,
                 "daily_average_minutes": analytics.daily_average_minutes,
                 "weekly_minutes": analytics.weekly_minutes,
+                "session_distribution": analytics.session_distribution,
+                "longest_session_minutes": analytics.longest_session_minutes,
+                "shorts_total_minutes": analytics.shorts_total_minutes,
+                "algorithmic_minutes": analytics.algorithmic_minutes,
+                "intentional_minutes": analytics.intentional_minutes,
             }
 
             db.storage.json.put(storage_key, payload)

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.auth import AuthorizedUser
 from app.libs.watch_history_models import WatchEvent
@@ -32,13 +32,18 @@ class WatchHistoryAnalyticsResponse(BaseModel):
     average_shorts_streak_minutes: float
     algorithmic_view_share: float
     intentional_view_share: float
-    recommendation_breakdown: Dict[str, int]
-    repeat_views: list
-    heatmap: Dict[str, Dict[str, int]]
-    daily_distribution: Dict[str, int]
+    recommendation_breakdown: Dict[str, int] = Field(default_factory=dict)
+    repeat_views: list = Field(default_factory=list)
+    heatmap: Dict[str, Dict[str, int]] = Field(default_factory=dict)
+    daily_distribution: Dict[str, int] = Field(default_factory=dict)
     shorts_share: float
     daily_average_minutes: float
     weekly_minutes: float
+    session_distribution: Dict[str, int] = Field(default_factory=dict)
+    longest_session_minutes: float = 0.0
+    shorts_total_minutes: float = 0.0
+    algorithmic_minutes: float = 0.0
+    intentional_minutes: float = 0.0
 
 
 class UploadResponse(BaseModel):
@@ -75,7 +80,17 @@ async def get_watch_history_analytics(user: AuthorizedUser) -> WatchHistoryAnaly
     analytics_data = await storage.get_analytics(user.sub)
     if not analytics_data:
         raise HTTPException(status_code=404, detail="No analytics data found. Please upload watch history first.")
-    
+
+    analytics_data.setdefault("recommendation_breakdown", {})
+    analytics_data.setdefault("repeat_views", [])
+    analytics_data.setdefault("heatmap", {})
+    analytics_data.setdefault("daily_distribution", {})
+    analytics_data.setdefault("session_distribution", {})
+    analytics_data.setdefault("longest_session_minutes", 0.0)
+    analytics_data.setdefault("shorts_total_minutes", 0.0)
+    analytics_data.setdefault("algorithmic_minutes", 0.0)
+    analytics_data.setdefault("intentional_minutes", 0.0)
+
     return WatchHistoryAnalyticsResponse(**analytics_data)
 
 

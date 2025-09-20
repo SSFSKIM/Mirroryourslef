@@ -26,6 +26,9 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
     const dailyAverage = analytics.daily_average_minutes ?? 0;
     const shortsShare = analytics.shorts_share ?? 0;
     const avgShortsStreak = analytics.average_shorts_streak_minutes ?? 0;
+    const longestSession = analytics.longest_session_minutes ?? 0;
+    const shortsMinutes = analytics.shorts_total_minutes ?? 0;
+    const intentionalMinutes = analytics.intentional_minutes ?? 0;
 
     if (algorithmicShare > 0.6) {
       messages.push({
@@ -34,7 +37,7 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
       });
     }
 
-    if (shortsShare > 0.4) {
+    if (shortsShare > 0.4 || shortsMinutes > 120) {
       messages.push({
         type: "insight",
         message: "Shorts take up a large slice of your week. Consider limiting Shorts streaks to 15 minutes and switching to long-form learning after.",
@@ -48,10 +51,24 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
       });
     }
 
+    if (longestSession > 90) {
+      messages.push({
+        type: "insight",
+        message: "One of your recent sessions ran past 90 minutes. Try a mid-session stretch reminder or break the session into chapters.",
+      });
+    }
+
     if (avgShortsStreak < 8 && algorithmicShare < 0.5) {
       messages.push({
         type: "celebration",
         message: "Nice balance! Your Shorts streaks stay short and you already split time between recommendations and purposeful viewing.",
+      });
+    }
+
+    if (intentionalMinutes > 150) {
+      messages.push({
+        type: "celebration",
+        message: "You spent over 2.5 hours on intentional content. Capture that focus by setting next week's learning goal now!",
       });
     }
 
