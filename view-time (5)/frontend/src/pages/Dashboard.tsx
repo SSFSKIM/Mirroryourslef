@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect } from "react";
 import { useAuthStore } from "utils/auth";
 import { UserProfile } from "components/UserProfile";
@@ -13,9 +10,16 @@ import { VideoLengthDistribution } from "components/VideoLengthDistribution";
 import { TopChannels } from "components/TopChannels";
 import { CategoryDistribution } from "components/CategoryDistribution";
 import { WatchThroughPercentage } from "components/WatchThroughPercentage";
+import WatchHistoryUploadCard from "components/WatchHistoryUploadCard";
+import { WatchHistoryHighlights } from "components/WatchHistoryHighlights";
+import { ViewingHeatmap } from "components/ViewingHeatmap";
+import { RepeatWatchList } from "components/RepeatWatchList";
+import { InAppNudges } from "components/InAppNudges";
+import useWatchHistoryStore from "utils/watchHistoryStore";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
+  const { loadStatus, loadAnalytics, status, analytics } = useWatchHistoryStore();
 
   useEffect(() => {
     // Initialize Firebase on component mount
@@ -23,7 +27,15 @@ export default function Dashboard() {
       console.log("Firebase authentication initialized in Dashboard");
     });
   }, []);
-  
+
+  // Auto-load watch history data when user is authenticated
+  useEffect(() => {
+    if (user && (!status || !analytics)) {
+      loadStatus();
+      loadAnalytics();
+    }
+  }, [user, status, analytics, loadStatus, loadAnalytics]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md">
@@ -39,7 +51,7 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
         <p>Welcome to your YouTube analytics dashboard!</p>
-        
+
         {/* YouTube Sync Section */}
         <div className="mt-8 mb-8">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Data Synchronization</h2>
@@ -47,12 +59,12 @@ export default function Dashboard() {
             <YouTubeSyncButton />
           </div>
         </div>
-        
+
         {/* Liked Videos Summary Analytics */}
         <div className="mt-8 mb-8">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Liked Videos Overview</h2>
           <LikedVideosStats className="mb-6" />
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="col-span-1">
               <ShortsVsRegularChart />
@@ -63,7 +75,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Detailed Analytics Dashboard */}
         <div className="mt-8 mb-8">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Analytics</h2>
@@ -72,7 +84,7 @@ export default function Dashboard() {
               <WatchTimeHeatMap className="w-full" />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
             <div className="col-span-1 lg:col-span-1 xl:col-span-2">
               <VideoLengthDistribution className="w-full h-full" />
@@ -81,7 +93,7 @@ export default function Dashboard() {
               <WatchThroughPercentage className="w-full h-full" />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="col-span-1">
               <TopChannels className="w-full h-full" limit={10} />
@@ -90,6 +102,18 @@ export default function Dashboard() {
               <CategoryDistribution className="w-full h-full" />
             </div>
           </div>
+        </div>
+
+        {/* Watch History Insights */}
+        <div className="mt-12 mb-8 space-y-6">
+          <h2 className="text-2xl font-bold tracking-tight">Watch History Insights</h2>
+          <WatchHistoryUploadCard />
+          <WatchHistoryHighlights />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ViewingHeatmap className="w-full" />
+            <InAppNudges className="w-full" />
+          </div>
+          <RepeatWatchList />
         </div>
       </main>
     </div>
