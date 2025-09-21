@@ -72,6 +72,20 @@ const buildVariables = () => {
 export default defineConfig({
 	define: buildVariables(),
 	plugins: [react(), splitVendorChunkPlugin(), tsConfigPaths(), injectHTML()],
+	optimizeDeps: {
+		// Pre-bundle heavy ESM deps to avoid many on-demand transforms in dev
+		include: [
+			"react",
+			"react-dom",
+			"recharts",
+			"firebase/app",
+			"firebase/auth",
+			"firebase/firestore",
+			"firebase/storage",
+			"zustand",
+			"sonner",
+		],
+	},
 	server: {
 		proxy: {
 			"/routes": {
