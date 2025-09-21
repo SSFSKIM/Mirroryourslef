@@ -16,4 +16,10 @@ run-backend:
 run-frontend:
 	cd frontend && ./run.sh
 
+dev:
+	docker compose -f docker-compose.dev.yml up --build
+
+dev-down:
+	docker compose -f docker-compose.dev.yml down
+
 .DEFAULT_GOAL := install

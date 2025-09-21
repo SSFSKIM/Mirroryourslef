@@ -43,6 +43,8 @@ The image mirrors the Databutton workspace: Python 3.11 with the `backend/requir
 ```bash
 cp .env.development.example .env.development  # fill in optional vars
 docker compose -f docker-compose.dev.yml up --build
+# or
+make dev
 ```
 
 The dev compose file runs the FastAPI backend with `uvicorn --reload` and a Vite dev server with hot module replacement on port `5173`, closely matching Databutton's live workspace workflow.
