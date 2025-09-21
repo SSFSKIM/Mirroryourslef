@@ -1,228 +1,41 @@
-# docker-compose.dev.yml - 개발 환경용 Docker Compose
-
-version: '3.8'
+version: '3.9'
 
 services:
-  # 개발용 YouTube Analytics 앱
-  youtube-analytics-dev:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile.dev
-      args:
-        - NODE_ENV=development
-        - PYTHON_ENV=development
-    container_name: youtube_analytics_dev
-    ports:
-      - "3000:3000"    # Frontend (Vite/React)
-      - "8000:8000"    # Backend (FastAPI)
-      - "5173:5173"    # Vite HMR
-      - "8001:8001"    # Additional dev server
-    environment:
-      # 개발 환경 변수
-      - NODE_ENV=development
-      - PYTHON_ENV=development
-      - DEBUG=true
-      - RELOAD=true
-      
-      # API Keys (개발용)
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID_DEV:-your-dev-google-client-id}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET_DEV:-your-dev-google-client-secret}
-      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY_DEV:-your-dev-youtube-api-key}
-      - OPENAI_API_KEY=${OPENAI_API_KEY_DEV:-your-dev-openai-api-key}
-      
-      # Firebase (개발용)
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID_DEV:-your-dev-firebase-project}
-      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY_DEV}
-      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL_DEV}
-      
-      # 데이터베이스
-      - DATABASE_URL=postgresql://postgres:password@postgres-dev:5432/youtube_analytics_dev
-      - REDIS_URL=redis://redis-dev:6379/0
-      
-      # 개발 도구
-      - PYTHONPATH=/app/backend
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
-      
+    container_name: viewtime_backend_dev
+    working_dir: /app
     volumes:
-      # 소스 코드 실시간 동기화
-      - .:/app
-      - /app/node_modules
-      - /app/.venv
-      - /app/.pdm-cache
-      
-      # 로그 및 데이터 영속성
-      - dev_logs:/app/logs
-      - dev_data:/app/data
-      
-      # 개발 도구 설정
-      - ./.vscode:/app/.vscode
-      - ./scripts:/app/scripts
-      
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.development
+    environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID_DEV:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET_DEV:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY_DEV:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY_DEV:-}
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    image: node:18-bullseye-slim
+    container_name: viewtime_frontend_dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env.development
+    environment:
+      NODE_ENV: development
+    command: bash -lc "corepack enable && yarn install --immutable && yarn dev --host 0.0.0.0 --port 5173"
     depends_on:
-      - postgres-dev
-      - redis-dev
-    networks:
-      - youtube-analytics-dev
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
-    command: >
-      sh -c "
-        echo 'Starting development environment...' &&
-        cd /app &&
-        
-        # Backend 의존성 설치
-        echo 'Installing Python dependencies...' &&
-        pip install -r requirements.txt &&
-        
-        # Frontend 의존성 설치
-        echo 'Installing Node.js dependencies...' &&
-        cd frontend &&
-        npm install &&
-        cd .. &&
-        
-        # 개발 서버 병렬 실행
-        echo 'Starting development servers...' &&
-        concurrently \
-          'cd frontend && npm run dev -- --host 0.0.0.0 --port 3000' \
-          'cd backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload' \
-          'echo \"Development environment ready!\"'
-      "
-
-  # 개발용 PostgreSQL
-  postgres-dev:
-    image: postgres:15-alpine
-    container_name: postgres_dev
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=youtube_analytics_dev
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_HOST_AUTH_METHOD=trust
-    volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - youtube-analytics-dev
-    restart: unless-stopped
-
-  # 개발용 Redis
-  redis-dev:
-    image: redis:7-alpine
-    container_name: redis_dev
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_dev_data:/data
-      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf
-    networks:
-      - youtube-analytics-dev
-    restart: unless-stopped
-
-  # 개발용 Nginx (선택적)
-  nginx-dev:
-    image: nginx:alpine
-    container_name: nginx_dev
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-      - dev_logs:/var/log/nginx
-    depends_on:
-      - youtube-analytics-dev
-    networks:
-      - youtube-analytics-dev
-    restart: unless-stopped
-    profiles:
-      - with-nginx
-
-  # 개발용 Mailhog (이메일 테스트)
-  mailhog:
-    image: mailhog/mailhog
-    container_name: mailhog_dev
-    ports:
-      - "8025:8025"  # Web UI
-      - "1025:1025"  # SMTP
-    networks:
-      - youtube-analytics-dev
-    profiles:
-      - with-mail
-
-  # 개발용 MinIO (S3 호환 스토리지)
-  minio:
-    image: minio/minio
-    container_name: minio_dev
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - youtube-analytics-dev
-    profiles:
-      - with-storage
-
-  # 개발용 Elasticsearch (로그 분석)
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: elasticsearch_dev
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - youtube-analytics-dev
-    profiles:
-      - with-elk
-
-  # 개발용 Kibana
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: kibana_dev
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - youtube-analytics-dev
-    profiles:
-      - with-elk
+      - backend
 
 volumes:
-  postgres_dev_data:
-  redis_dev_data:
-  minio_data:
-  elasticsearch_data:
-  dev_logs:
-  dev_data:
-
-networks:
-  youtube-analytics-dev:
-    driver: bridge
-    name: youtube-analytics-dev-network
-
-# 개발용 확장 설정
-x-common-variables: &common-variables
-  TZ: Asia/Seoul
-  LOG_LEVEL: DEBUG
-
-# 개발 프로파일별 실행 예시:
-# docker-compose -f docker-compose.dev.yml up                    # 기본 개발 환경
-# docker-compose -f docker-compose.dev.yml --profile with-nginx up  # Nginx 포함
-# docker-compose -f docker-compose.dev.yml --profile with-elk up    # ELK 스택 포함
-# docker-compose -f docker-compose.dev.yml --profile with-mail up   # 메일 테스트 포함
+  frontend_node_modules:

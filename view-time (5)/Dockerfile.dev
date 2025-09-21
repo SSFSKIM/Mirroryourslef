@@ -1,84 +1,21 @@
-# Dockerfile.dev - 개발 환경용
 FROM python:3.11-slim
 
-# 환경 변수 설정
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    NODE_ENV=development \
-    PYTHON_ENV=development
+    PYTHONUNBUFFERED=1
 
-# 시스템 의존성 설치
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    vim \
-    htop \
-    procps \
-    nodejs \
-    npm \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      curl \
+      git \
+      libffi-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-# Node.js 최신 LTS 설치
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
-
-# 개발용 Python 도구 설치
-RUN pip install --upgrade pip && \
-    pip install pdm black flake8 mypy pytest pytest-asyncio ipython
-
-# 작업 디렉토리 설정
 WORKDIR /app
 
-# 사용자 생성 (개발 편의를 위해 root 권한 유지)
-RUN useradd -m -s /bin/bash developer && \
-    usermod -aG sudo developer && \
-    echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+COPY backend/requirements.txt ./requirements.txt
 
-# Python 의존성 파일 복사 및 설치
-COPY requirements.txt pdm_config.toml ./
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel \
+ && pip install --no-cache-dir -r requirements.txt
 
-# PDM 설정
-RUN pdm config check_update false && \
-    pdm config cache_dir /app/.pdm-cache
-
-# Node.js 패키지 설정을 위한 기본 구조 생성
-RUN mkdir -p frontend && \
-    cd frontend && \
-    npm init -y && \
-    npm install --save-dev \
-    @vitejs/plugin-react \
-    @types/react \
-    @types/react-dom \
-    typescript \
-    vite \
-    tailwindcss \
-    autoprefixer \
-    postcss \
-    eslint \
-    prettier
-
-# 개발 도구 설치
-RUN npm install -g nodemon concurrently
-
-# 개발용 포트 노출
-EXPOSE 3000 8000 5173 8001
-
-# 볼륨 마운트를 위한 디렉토리 생성
-RUN mkdir -p /app/backend /app/frontend /app/logs /app/data && \
-    chown -R developer:developer /app
-
-# 개발자 계정으로 전환
-USER developer
-
-# 개발용 시작 스크립트
-COPY --chown=developer:developer scripts/dev-entrypoint.sh /app/dev-entrypoint.sh
-RUN chmod +x /app/dev-entrypoint.sh
-
-# 기본 명령어 (개발 서버 실행)
-CMD ["/app/dev-entrypoint.sh"]
-
-# 헬스체크 (개발 환경용)
-HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:3000 && curl -f http://localhost:8000/health || exit 1
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

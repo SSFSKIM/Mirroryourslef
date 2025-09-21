@@ -1,0 +1,14 @@
+.git
+**/__pycache__
+**/*.pyc
+node_modules
+frontend/node_modules
+backend/.venv
+backend/.mypy_cache
+backend/.pytest_cache
+frontend/.cache
+.env
+*.log
+Dockerfile.dev
+docker-compose.dev.yml
+.dockerignore

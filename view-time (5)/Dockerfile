@@ -1,94 +1,92 @@
-# Multi-stage Dockerfile for YouTube Analytics App
-# Based on Databutton workspace configuration
+# Dockerfile that mirrors Databutton's Python + Node workspace
+# for the YouTube analytics application
 
-# Stage 1: Python Dependencies Builder
-FROM python:3.11-slim as python-builder
+###############################
+# Stage 1 - Backend dependencies
+###############################
+FROM python:3.11-slim AS backend-deps
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
-# Install PDM (Python Dependency Manager)
-RUN pip install pdm
+RUN apt-get update \ 
+ && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        git \ 
+ && rm -rf /var/lib/apt/lists/*
 
-# Create workspace directories
-WORKDIR /workspace
-RUN mkdir -p /workspace/venvs /workspace/cache
+RUN python -m venv "$VIRTUAL_ENV"
 
-# Copy Python requirements
-COPY requirements.txt .
-COPY pdm_config.toml .
+COPY backend/requirements.txt /tmp/requirements.txt
 
-# Create pyproject.toml from requirements
-RUN pdm import -f requirements requirements.txt
+RUN pip install --upgrade pip setuptools wheel \ 
+ && pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Install dependencies with cache
-RUN --mount=type=cache,target=/workspace/cache \
-    pdm config cache_dir /workspace/cache && \
-    pdm sync
+###############################
+# Stage 2 - Frontend build
+###############################
+FROM node:18-bullseye-slim AS frontend-build
 
-# Stage 2: Node.js Frontend Builder  
-FROM node:18-alpine as frontend-builder
+ENV NODE_ENV=production
+WORKDIR /frontend
 
-WORKDIR /app/frontend
+RUN apt-get update \ 
+ && apt-get install -y --no-install-recommends \
+        python3 \
+        make \
+        g++ \ 
+ && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY frontend/package*.json ./
+COPY frontend/package.json frontend/yarn.lock ./
 
-# Install dependencies
-RUN npm ci --only=production
+RUN corepack enable \ 
+ && yarn install --immutable
 
-# Copy frontend source
-COPY frontend/ .
+COPY frontend/ ./
 
-# Build frontend
-RUN npm run build
+RUN yarn build
 
-# Stage 3: Final Production Image
-FROM python:3.11-slim
+###############################
+# Stage 3 - Runtime
+###############################
+FROM python:3.11-slim AS runtime
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    nginx \
-    supervisor \
-    && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Create app user
-RUN useradd -m -u 1000 appuser
+RUN apt-get update \ 
+ && apt-get install -y --no-install-recommends \
+        nginx \
+        supervisor \
+        curl \ 
+ && rm -rf /var/lib/apt/lists/*
 
-# Set up directories
+# Copy virtual environment with all Python deps
+COPY --from=backend-deps $VIRTUAL_ENV $VIRTUAL_ENV
+
+# Create application directory structure
 WORKDIR /app
-RUN mkdir -p /app/logs /app/static /app/backend
-RUN chown -R appuser:appuser /app
+COPY backend/ ./backend
+COPY --from=frontend-build /frontend/dist ./static
 
-# Copy Python environment from builder
-COPY --from=python-builder /workspace/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
+RUN mkdir -p /app/logs \
+ && useradd -m -u 1000 appuser \
+ && chown -R appuser:appuser /app
 
-# Copy built frontend
-COPY --from=frontend-builder /app/frontend/dist /app/static
+# Runtime configuration files
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy backend code
-COPY backend/ /app/backend/
-RUN chown -R appuser:appuser /app
+ENV PYTHONPATH=/app/backend
 
-# Configure Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+EXPOSE 80 8000
 
-# Switch to app user
-USER appuser
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://127.0.0.1:8000/health || curl -f http://127.0.0.1/health || exit 1
 
-# Expose ports
-EXPOSE 8000 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

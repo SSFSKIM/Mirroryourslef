@@ -79,6 +79,10 @@ def create_app() -> FastAPI:
     app = FastAPI()
     app.include_router(import_api_routers())
 
+    @app.get("/health", include_in_schema=False)
+    async def health_check():
+        return {"status": "ok"}
+
     for route in app.routes:
         if hasattr(route, "methods"):
             for method in route.methods:
