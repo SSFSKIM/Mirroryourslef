@@ -2,6 +2,10 @@
 
 This project consists of a FastAPI backend server and a React + TypeScript frontend application exported from Databutton.
 
+## Documentation
+
+- [ViewTime PRD & TRD](docs/PRD_TRD.md)
+
 ## Stack
 
 - React+Typescript frontend with `yarn` as package manager.
@@ -48,4 +52,3 @@ make dev
 ```
 
 The dev compose file runs the FastAPI backend with `uvicorn --reload` and a Vite dev server with hot module replacement on port `5173`, closely matching Databutton's live workspace workflow.
-

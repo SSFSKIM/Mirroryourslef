@@ -367,6 +367,7 @@ test: Add sync flow validation
 - Firestore: https://firebase.google.com/docs/firestore
 - Tailwind CSS: https://tailwindcss.com/docs
 - shadcn/ui: https://ui.shadcn.com/docs
+- PRD & TRD: `view-time (5)/docs/PRD_TRD.md`
 
 ## Important Notes for AI Agents
 1. **Always prioritize user value** - Every feature should solve a real problem
