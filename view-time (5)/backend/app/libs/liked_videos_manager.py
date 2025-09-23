@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-import databutton as db
+from app.libs import kv_store
 from app.libs.liked_videos_models import (
     LikedVideo, LikedVideosAnalytics, SyncStatus
 )
@@ -156,7 +156,7 @@ class LikedVideosAnalyticsManager:
                 for key, value in status_updates.items():
                     new_status[key] = value
                 
-                db.storage.json.put(f"sync_status_{user_id}", new_status)
+                kv_store.put_json(f"sync_status_{user_id}", new_status)
                 return True
             
         except Exception as e:
@@ -220,7 +220,7 @@ class LikedVideosAnalyticsManager:
             for key in keys_to_delete:
                 try:
                     # Check if key exists before trying to delete
-                    existing_data = db.storage.json.get(key, default=None)
+                    existing_data = kv_store.get_json(key, default=None)
                     if existing_data:
                         # In a real implementation, we'd delete the key
                         # For now, we'll just log it

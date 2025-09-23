@@ -1,7 +1,7 @@
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-import databutton as db
+from app.libs import kv_store
 from app.libs.liked_videos_models import (
     LikedVideo, LikedVideosAnalytics, SyncStatus,
     KeywordAnalysis, CategoryStats, ChannelStats,
@@ -70,9 +70,9 @@ class LikedVideosStorage:
                     "data": video_data
                 })
             
-            # Store in Firestore using databutton storage as JSON
+            # Store as a single document in KV storage (Firestore preferred)
             storage_key = f"liked_videos_{user_id}"
-            db.storage.json.put(storage_key, {
+            kv_store.put_json(storage_key, {
                 "videos": batch_data,
                 "last_updated": datetime.now().isoformat(),
                 "total_count": len(batch_data)
@@ -102,9 +102,9 @@ class LikedVideosStorage:
                     "data": video_data
                 })
             
-            # Store in Firestore using databutton storage as JSON
+            # Store as a single document in KV storage (Firestore preferred)
             storage_key = f"liked_videos_{user_id}"
-            db.storage.json.put(storage_key, {
+            kv_store.put_json(storage_key, {
                 "videos": batch_data,
                 "last_updated": datetime.now().isoformat(),
                 "total_count": len(batch_data)
@@ -120,7 +120,7 @@ class LikedVideosStorage:
         """Retrieve liked videos for a user"""
         try:
             storage_key = f"liked_videos_{user_id}"
-            data = db.storage.json.get(storage_key, default={})
+            data = kv_store.get_json(storage_key, default={})
             
             if not data or "videos" not in data:
                 return []
@@ -148,7 +148,7 @@ class LikedVideosStorage:
         """Get the count of liked videos for a user without loading all data"""
         try:
             storage_key = f"liked_videos_{user_id}"
-            data = db.storage.json.get(storage_key, default={})
+            data = kv_store.get_json(storage_key, default={})
             
             return data.get("total_count", 0)
             
@@ -230,7 +230,7 @@ class LikedVideosStorage:
                 "data_completeness_score": analytics.data_completeness_score
             }
             
-            db.storage.json.put(storage_key, analytics_data)
+            kv_store.put_json(storage_key, analytics_data)
             return True
             
         except Exception as e:
@@ -241,7 +241,7 @@ class LikedVideosStorage:
         """Retrieve analytics for a user and sample size"""
         try:
             storage_key = f"analytics_{user_id}_{sample_size}"
-            return db.storage.json.get(storage_key, default=None)
+            return kv_store.get_json(storage_key, default=None)
             
         except Exception as e:
             print(f"Error retrieving analytics for user {user_id}: {e}")
@@ -269,7 +269,7 @@ class LikedVideosStorage:
                 "updated_at": datetime.now().isoformat()
             }
             
-            db.storage.json.put(storage_key, status_data)
+            kv_store.put_json(storage_key, status_data)
             return True
             
         except Exception as e:
@@ -285,7 +285,7 @@ class LikedVideosStorage:
             status_data["user_id"] = user_id
             status_data["updated_at"] = datetime.now().isoformat()
             
-            db.storage.json.put(storage_key, status_data)
+            kv_store.put_json(storage_key, status_data)
             return True
             
         except Exception as e:
@@ -296,7 +296,7 @@ class LikedVideosStorage:
         """Retrieve sync status for a user"""
         try:
             storage_key = f"sync_status_{user_id}"
-            return db.storage.json.get(storage_key, default=None)
+            return kv_store.get_json(storage_key, default=None)
             
         except Exception as e:
             print(f"Error retrieving sync status for user {user_id}: {e}")
@@ -316,7 +316,7 @@ class LikedVideosStorage:
                 "updated_at": datetime.now().isoformat()
             }
             
-            db.storage.json.put(storage_key, prefs_data)
+            kv_store.put_json(storage_key, prefs_data)
             return True
             
         except Exception as e:
@@ -327,7 +327,7 @@ class LikedVideosStorage:
         """Retrieve user preferences with defaults"""
         try:
             storage_key = f"user_preferences_{user_id}"
-            return db.storage.json.get(storage_key, default={
+            return kv_store.get_json(storage_key, default={
                 "preferred_sample_size": 100,
                 "auto_sync_enabled": True,
                 "notification_preferences": {},

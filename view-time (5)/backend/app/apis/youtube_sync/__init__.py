@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any
-import databutton as db
+from app.libs import kv_store
 from datetime import datetime, timedelta
 import time
 
@@ -31,26 +31,26 @@ class AccessTokenRequest(BaseModel):
 # Helper function to save sync status
 def save_sync_status(user_id: str, sync_status: dict):
     key = sanitize_storage_key(f"sync_status_{user_id}")
-    db.storage.json.put(key, sync_status)
+    kv_store.put_json(key, sync_status)
 
 # Helper function to get sync status
 def get_sync_status(user_id: str) -> dict:
     key = sanitize_storage_key(f"sync_status_{user_id}")
     try:
-        return db.storage.json.get(key, default={})
+        return kv_store.get_json(key, default={})
     except Exception:
         return {}
 
 # Helper function to save watch history
 def save_watch_history(user_id: str, history: List[Dict[str, Any]]):
     key = sanitize_storage_key(f"watch_history_{user_id}")
-    db.storage.json.put(key, history)
+    kv_store.put_json(key, history)
 
 # Helper function to get watch history
 def get_watch_history(user_id: str) -> List[dict]:
     key = sanitize_storage_key(f"watch_history_{user_id}")
     try:
-        return db.storage.json.get(key, default=[])
+        return kv_store.get_json(key, default=[])
     except Exception:
         return []
 

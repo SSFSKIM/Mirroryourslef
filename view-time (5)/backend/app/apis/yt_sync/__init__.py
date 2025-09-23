@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 import requests
-import databutton as db
+from app.libs import kv_store
 import json
 from datetime import datetime, timedelta
 from app.auth import AuthorizedUser
@@ -333,24 +333,24 @@ async def sync_liked_videos(request: SyncRequest, user: AuthorizedUser):
     except HTTPException as e:
         # Propagate HTTP exceptions (already formatted)
         # Update sync status with error
-        sync_status = json.dumps({
+        sync_status = {
             "is_syncing": False,
             "error": e.detail,
             "last_error_time": datetime.now().isoformat(),
-            "user_id": user.sub
-        })
-        db.storage.text.put(f"sync_status_{user.sub}", sync_status)
+            "user_id": user.sub,
+        }
+        kv_store.put_json(f"sync_status_{user.sub}", sync_status)
         raise
     except requests.RequestException as e:
         # Handle network or API-specific errors
         error_msg = f"YouTube API request failed: {str(e)}"
-        sync_status = json.dumps({
+        sync_status = {
             "is_syncing": False,
             "error": error_msg,
             "last_error_time": datetime.now().isoformat(),
-            "user_id": user.sub
-        })
-        db.storage.text.put(f"sync_status_{user.sub}", sync_status)
+            "user_id": user.sub,
+        }
+        kv_store.put_json(f"sync_status_{user.sub}", sync_status)
         
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -359,13 +359,13 @@ async def sync_liked_videos(request: SyncRequest, user: AuthorizedUser):
     except ValueError as e:
         # Handle validation errors
         error_msg = f"Invalid data: {str(e)}"
-        sync_status = json.dumps({
+        sync_status = {
             "is_syncing": False,
             "error": error_msg,
             "last_error_time": datetime.now().isoformat(),
-            "user_id": user.sub
-        })
-        db.storage.text.put(f"sync_status_{user.sub}", sync_status)
+            "user_id": user.sub,
+        }
+        kv_store.put_json(f"sync_status_{user.sub}", sync_status)
         
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -374,13 +374,13 @@ async def sync_liked_videos(request: SyncRequest, user: AuthorizedUser):
     except Exception as e:
         # Catch-all for unexpected errors
         error_msg = f"Failed to sync liked videos: {str(e)}"
-        sync_status = json.dumps({
+        sync_status = {
             "is_syncing": False,
             "error": error_msg,
             "last_error_time": datetime.now().isoformat(),
-            "user_id": user.sub
-        })
-        db.storage.text.put(f"sync_status_{user.sub}", sync_status)
+            "user_id": user.sub,
+        }
+        kv_store.put_json(f"sync_status_{user.sub}", sync_status)
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -438,7 +438,7 @@ async def get_analytics(user: AuthorizedUser, sample_size: int = 100) -> Analyti
         
         # Debug: Check if data exists in storage directly
         storage_key = f"analytics_{user_id}_{validated_sample_size}"
-        direct_check = db.storage.json.get(storage_key, default=None)
+        direct_check = kv_store.get_json(storage_key, default=None)
         print(f"Direct storage check - data exists: {direct_check is not None}")
         if direct_check:
             print(f"Direct storage data keys: {list(direct_check.keys())}")

@@ -1,0 +1,30 @@
+# Ignore VCS, local envs, caches, and test artifacts
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.venv
+venv
+env
+
+# Editor/OS
+.DS_Store
+.idea
+.vscode
+
+# Logs and dumps
+*.log
+logs/
+
+# Not needed for runtime
+install.sh
+run.sh
+uv.lock
+pyproject.toml
+README.md
+

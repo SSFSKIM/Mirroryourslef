@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-import databutton as db
+from app.libs import kv_store
 import json
 try:
     import google.oauth2.credentials
@@ -191,26 +191,26 @@ def get_category_name(category_id: str) -> str:
 # Save the sync status to storage
 def save_sync_status(user_id: str, status: dict):
     key = sanitize_storage_key(f"sync_status_{user_id}")
-    db.storage.json.put(key, status)
+    kv_store.put_json(key, status)
 
 # Get the sync status from storage
 def get_sync_status(user_id: str) -> dict:
     key = sanitize_storage_key(f"sync_status_{user_id}")
     try:
-        return db.storage.json.get(key, default={})
+        return kv_store.get_json(key, default={})
     except:
         return {}
 
 # Save watch history to storage
 def save_watch_history(user_id: str, history: List[WatchHistoryItem]):
     key = sanitize_storage_key(f"watch_history_{user_id}")
-    db.storage.json.put(key, [item.dict() for item in history])
+    kv_store.put_json(key, [item.dict() for item in history])
 
 # Get watch history from storage
 def get_watch_history(user_id: str) -> List[dict]:
     key = sanitize_storage_key(f"watch_history_{user_id}")
     try:
-        return db.storage.json.get(key, default=[])
+        return kv_store.get_json(key, default=[])
     except:
         return []
 

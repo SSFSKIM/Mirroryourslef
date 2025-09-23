@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import databutton as db
+from app.libs import kv_store
 
 from app.libs.watch_history_models import WatchHistoryAnalytics, WatchEvent
 
@@ -23,7 +23,7 @@ class WatchHistoryStorage:
                 "total_count": len(events),
                 "last_updated": datetime.now().isoformat(),
             }
-            db.storage.json.put(storage_key, payload)
+            kv_store.put_json(storage_key, payload)
             return True
         except Exception as exc:  # pragma: no cover - defensive logging
             print(f"Failed to store watch history events for {user_id}: {exc}")
@@ -32,7 +32,7 @@ class WatchHistoryStorage:
     async def get_events(self, user_id: str) -> List[Dict[str, Any]]:
         storage_key = self.EVENTS_KEY_TEMPLATE.format(user_id=user_id)
         try:
-            payload = db.storage.json.get(storage_key, default={})
+            payload = kv_store.get_json(storage_key, default={})
             return payload.get("events", [])
         except Exception as exc:
             print(f"Failed to fetch watch history events for {user_id}: {exc}")
@@ -77,7 +77,7 @@ class WatchHistoryStorage:
                 "intentional_minutes": analytics.intentional_minutes,
             }
 
-            db.storage.json.put(storage_key, payload)
+            kv_store.put_json(storage_key, payload)
             return True
         except Exception as exc:  # pragma: no cover
             print(f"Failed to store watch history analytics for {analytics.user_id}: {exc}")
@@ -86,7 +86,7 @@ class WatchHistoryStorage:
     async def get_analytics(self, user_id: str) -> Optional[Dict[str, Any]]:
         storage_key = self.ANALYTICS_KEY_TEMPLATE.format(user_id=user_id)
         try:
-            return db.storage.json.get(storage_key, default=None)
+            return kv_store.get_json(storage_key, default=None)
         except Exception as exc:
             print(f"Failed to fetch watch history analytics for {user_id}: {exc}")
             return None
@@ -95,7 +95,7 @@ class WatchHistoryStorage:
         try:
             storage_key = self.STATUS_KEY_TEMPLATE.format(user_id=user_id)
             payload = {**status, "updated_at": datetime.now().isoformat()}
-            db.storage.json.put(storage_key, payload)
+            kv_store.put_json(storage_key, payload)
             return True
         except Exception as exc:
             print(f"Failed to store watch history status for {user_id}: {exc}")
@@ -104,7 +104,7 @@ class WatchHistoryStorage:
     async def get_status(self, user_id: str) -> Dict[str, Any]:
         storage_key = self.STATUS_KEY_TEMPLATE.format(user_id=user_id)
         try:
-            return db.storage.json.get(
+            return kv_store.get_json(
                 storage_key,
                 default={
                     "last_uploaded_at": None,
@@ -127,9 +127,9 @@ class WatchHistoryStorage:
             status_key = self.STATUS_KEY_TEMPLATE.format(user_id=user_id)
 
             # Overwrite with empty payloads to honour "process and delete"
-            db.storage.json.put(events_key, {"events": [], "total_count": 0, "last_updated": None})
-            db.storage.json.put(analytics_key, {})
-            db.storage.json.put(
+            kv_store.put_json(events_key, {"events": [], "total_count": 0, "last_updated": None})
+            kv_store.put_json(analytics_key, {})
+            kv_store.put_json(
                 status_key,
                 {
                     "last_uploaded_at": None,

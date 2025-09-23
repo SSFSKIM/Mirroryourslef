@@ -1,14 +1,34 @@
+# VCS / editor
 .git
+.gitignore
+.DS_Store
+.idea
+.vscode
+
+# Node artifacts
+frontend/node_modules
+frontend/.pnp.cjs
+frontend/.pnp.loader.mjs
+frontend/.yarn
+frontend/dist
+
+# Python artifacts
 **/__pycache__
 **/*.pyc
-node_modules
-frontend/node_modules
-backend/.venv
-backend/.mypy_cache
-backend/.pytest_cache
-frontend/.cache
-.env
-*.log
-Dockerfile.dev
-docker-compose.dev.yml
-.dockerignore
+**/*.pyo
+**/*.pyd
+.venv
+venv
+env
+
+# Logs
+**/*.log
+logs/
+
+# Dev / docs not needed in runtime image
+README.md
+backend/install.sh
+backend/run.sh
+backend/uv.lock
+backend/pyproject.toml
+

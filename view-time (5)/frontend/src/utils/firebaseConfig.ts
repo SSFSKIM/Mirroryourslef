@@ -1,12 +1,11 @@
-// Firebase configuration
-// NOTE: Replace these values with your Firebase project credentials
+// Firebase configuration from environment variables
 export const firebaseConfig = {
-  apiKey: "AIzaSyBn8353wm9b6hiSfOvxokpziN71SUwMlNc",
-  authDomain: "view-time-6ba20.firebaseapp.com",
-  projectId: "view-time-6ba20",
-  storageBucket: "view-time-6ba20.firebasestorage.app",
-  messagingSenderId: "938227880748",
-  appId: "1:938227880748:web:5bcf827c8bb4a9d12cd289"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Google Auth Scopes for YouTube Data API

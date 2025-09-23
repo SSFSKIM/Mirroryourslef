@@ -47,9 +47,11 @@ const buildVariables = () => {
 
 	const defines: Record<string, string> = {
 		__APP_ID__: JSON.stringify(appId),
-		__API_PATH__: JSON.stringify(""),
-		__API_HOST__: JSON.stringify(""),
-		__API_PREFIX_PATH__: JSON.stringify(""),
+		// Keep API_PATH empty and set API_PREFIX_PATH to "/routes" so the
+		// generated client targets same-origin "/routes/**" endpoints.
+		__API_PATH__: JSON.stringify(process.env.API_PATH ?? ""),
+		__API_HOST__: JSON.stringify(process.env.API_HOST ?? ""),
+		__API_PREFIX_PATH__: JSON.stringify(process.env.API_PREFIX_PATH ?? "/routes"),
 		__API_URL__: JSON.stringify("http://localhost:8000"),
 		__WS_API_URL__: JSON.stringify("ws://localhost:8000"),
 		__APP_BASE_PATH__: JSON.stringify("/"),
