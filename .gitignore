@@ -19,6 +19,7 @@ secrets/
 *serviceAccount*.json
 *-adminsdk-*.json
 firebase-adminsdk-*.json
+extensions.json
 
 # Node / Frontend
 node_modules/
@@ -49,4 +50,4 @@ temp/
 # Editors/IDE
 .idea/
 .vscode/
-
+extensions.json

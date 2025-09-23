@@ -30,13 +30,21 @@ export default function Dashboard() {
     });
   }, []);
 
-  // Auto-load watch history data when user is authenticated
+  // Load status once when user becomes available or status is missing
   useEffect(() => {
-    if (user && (!status || !analytics)) {
+    if (user && !status) {
       loadStatus();
+    }
+  }, [user, status, loadStatus]);
+
+  // Load analytics only after processing is completed and events exist
+  useEffect(() => {
+    const hasEvents = (status?.total_events ?? 0) > 0;
+    const isReady = status?.processing_state === "completed";
+    if (user && hasEvents && isReady && !analytics) {
       loadAnalytics();
     }
-  }, [user, status, analytics, loadStatus, loadAnalytics]);
+  }, [user, status, analytics, loadAnalytics]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

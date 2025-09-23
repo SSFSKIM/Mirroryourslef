@@ -1,1 +1,26 @@
-[{"name":"firebase-auth","version":"1","config":{"firebaseConfig":{"apiKey":"AIzaSyBn8353wm9b6hiSfOvxokpziN71SUwMlNc","authDomain":"view-time-6ba20.firebaseapp.com","projectId":"view-time-6ba20","storageBucket":"view-time-6ba20.firebasestorage.app","messagingSenderId":"938227880748","appId":"1:938227880748:web:5bcf827c8bb4a9d12cd289","measurementId":"G-1QXT7HTFE6"},"signInOptions":{"google":true},"siteName":"ViewTime","signInSuccessUrl":"/"}}]
+[
+  {
+    "name": "firebase-auth",
+    "version": "1",
+    "config": {
+      "firebaseConfig": {
+        "apiKey": "AIzaSyBn8353wm9b6hiSfOvxokpziN71SUwMlNc",
+        "authDomain": "view-time-6ba20.firebaseapp.com",
+        "projectId": "view-time-6ba20",
+        "storageBucket": "view-time-6ba20.firebasestorage.app",
+        "messagingSenderId": "938227880748",
+        "appId": "1:938227880748:web:5bcf827c8bb4a9d12cd289"
+      },
+      "signInOptions": {
+        "google": true,
+        "github": false,
+        "facebook": false,
+        "twitter": false,
+        "emailAndPassword": false,
+        "magicLink": false
+      },
+      "siteName": "ViewTime",
+      "signInSuccessUrl": "/"
+    }
+  }
+]

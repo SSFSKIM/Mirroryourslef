@@ -80,10 +80,26 @@ const fallbackFirebaseConfig = {
   appId: viteEnv.VITE_FIREBASE_APP_ID ?? "",
 };
 
+// Sensible defaults for optional extension fields so Zod validation doesn't fail
+const extensionDefaults = {
+  signInOptions: {
+    google: true,
+    github: false,
+    facebook: false,
+    twitter: false,
+    emailAndPassword: false,
+    magicLink: false,
+  },
+  siteName: "ViewTime",
+  signInSuccessUrl: "/",
+};
+
 export const config: FirebaseExtensionConfig = configSchema.parse({
-  ...parsed,
+  ...extensionDefaults,
+  ...(parsed ?? {}),
   firebaseConfig: {
-    ...(parsed?.firebaseConfig ?? {}),
+    // Vite env values take precedence if provided at build time
     ...fallbackFirebaseConfig,
+    ...(parsed?.firebaseConfig ?? {}),
   },
 });

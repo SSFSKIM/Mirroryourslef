@@ -26,6 +26,7 @@ type WatchHistoryState = {
   error: string | null;
   uploadMessage: string | null;
   lastUpdatedAt: string | null;
+  lastAnalyticsAttemptAt: number | null;
   loadStatus: () => Promise<void>;
   loadAnalytics: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -42,6 +43,7 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
   error: null,
   uploadMessage: null,
   lastUpdatedAt: null,
+  lastAnalyticsAttemptAt: null,
 
   loadStatus: async () => {
     set({ isLoadingStatus: true, error: null });
@@ -66,9 +68,29 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
   loadAnalytics: async () => {
     set({ isLoadingAnalytics: true, error: null });
     try {
+      // Throttle analytics fetch to avoid tight loops when data isn't ready
+      const now = Date.now();
+      const { lastAnalyticsAttemptAt, status } = get();
+
+      // Only try to load analytics after we have events and processing completed
+      const hasEvents = (status?.total_events ?? 0) > 0;
+      const isReady = status?.processing_state === "completed";
+      if (!hasEvents || !isReady) {
+        set({ isLoadingAnalytics: false });
+        return;
+      }
+
+      // If we tried very recently (e.g., within 5 seconds) skip to reduce noise
+      if (lastAnalyticsAttemptAt && now - lastAnalyticsAttemptAt < 5000) {
+        set({ isLoadingAnalytics: false });
+        return;
+      }
+      set({ lastAnalyticsAttemptAt: now });
+
       const response = await brain.get_watch_history_analytics();
       if (!response.ok) {
         if (response.status === 404) {
+          // Keep analytics as null and back off further attempts for a short period
           set({ analytics: null, isLoadingAnalytics: false });
           return;
         }
@@ -88,7 +110,9 @@ const useWatchHistoryStore = create<WatchHistoryState>((set, get) => ({
   },
 
   refresh: async () => {
-    await Promise.allSettled([get().loadStatus(), get().loadAnalytics()]);
+    // Refresh status first; only fetch analytics when data is expected to exist
+    await get().loadStatus();
+    await get().loadAnalytics();
   },
 
   uploadTakeout: async (file: File) => {
