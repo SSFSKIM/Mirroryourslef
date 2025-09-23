@@ -55,6 +55,35 @@ type FirebaseExtensionConfig = z.infer<typeof configSchema>;
 // This is set by vite.config.ts
 declare const __FIREBASE_CONFIG__: string;
 
-export const config: FirebaseExtensionConfig = configSchema.parse(
-  JSON.parse(__FIREBASE_CONFIG__),
-);
+// Safely parse injected config; fall back to VITE_* vars if missing
+let parsed: any = {};
+try {
+  // __FIREBASE_CONFIG__ is injected at build-time by Vite define().
+  // When not provided it can be undefined/empty – guard to avoid JSON.parse errors.
+  const raw = (typeof __FIREBASE_CONFIG__ === "string" && __FIREBASE_CONFIG__) || "{}";
+  parsed = JSON.parse(raw) ?? {};
+} catch (_e) {
+  parsed = {};
+}
+
+// Build a firebaseConfig from VITE_* as a runtime fallback when extensions are not present.
+// These are read at build time by Vite and inlined into the bundle.
+type WithEnvMode = { env: Record<string, string | undefined> };
+const viteEnv = (import.meta as unknown as WithEnvMode).env as Record<string, string | undefined>;
+
+const fallbackFirebaseConfig = {
+  apiKey: viteEnv.VITE_FIREBASE_API_KEY ?? "",
+  authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN ?? "",
+  projectId: viteEnv.VITE_FIREBASE_PROJECT_ID ?? "",
+  storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET ?? "",
+  messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "",
+  appId: viteEnv.VITE_FIREBASE_APP_ID ?? "",
+};
+
+export const config: FirebaseExtensionConfig = configSchema.parse({
+  ...parsed,
+  firebaseConfig: {
+    ...(parsed?.firebaseConfig ?? {}),
+    ...fallbackFirebaseConfig,
+  },
+});

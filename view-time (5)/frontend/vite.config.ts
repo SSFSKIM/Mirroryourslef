@@ -32,14 +32,13 @@ const listExtensions = (): Extension[] => {
 
 const extensions = listExtensions();
 
-const getExtensionConfig = (name: string): string => {
+const getExtensionConfig = (name: string): Record<string, unknown> => {
 	const extension = extensions.find((it) => it.name === name);
-
 	if (!extension) {
 		console.warn(`Extension ${name} not found`);
+		return {};
 	}
-
-	return JSON.stringify(extension?.config);
+	return (extension.config ?? {}) as Record<string, unknown>;
 };
 
 const buildVariables = () => {
@@ -61,7 +60,10 @@ const buildVariables = () => {
 		__APP_DEPLOY_USERNAME__: JSON.stringify(""),
 		__APP_DEPLOY_APPNAME__: JSON.stringify(""),
 		__APP_DEPLOY_CUSTOM_DOMAIN__: JSON.stringify(""),
-		__STACK_AUTH_CONFIG__: JSON.stringify(getExtensionConfig(ExtensionName.STACK_AUTH)),
+		// Provide single-stringified JSON to be parsed in the app code.
+		__STACK_AUTH_CONFIG__: JSON.stringify(
+			getExtensionConfig(ExtensionName.STACK_AUTH),
+		),
 		__FIREBASE_CONFIG__: JSON.stringify(
 			getExtensionConfig(ExtensionName.FIREBASE_AUTH),
 		),
