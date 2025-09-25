@@ -42,6 +42,7 @@ const configSchema = z.object({
       storageBucket: z.string().default(""),
       messagingSenderId: z.string().default(""),
       appId: z.string().default(""),
+      measurementId: z.string().default(""),
     },
     {
       description:
@@ -78,6 +79,7 @@ const fallbackFirebaseConfig = {
   storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET ?? "",
   messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "",
   appId: viteEnv.VITE_FIREBASE_APP_ID ?? "",
+  measurementId: viteEnv.VITE_FIREBASE_MEASUREMENT_ID ?? "",
 };
 
 // Sensible defaults for optional extension fields so Zod validation doesn't fail

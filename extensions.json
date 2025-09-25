@@ -9,7 +9,8 @@
         "projectId": "view-time-6ba20",
         "storageBucket": "view-time-6ba20.firebasestorage.app",
         "messagingSenderId": "938227880748",
-        "appId": "1:938227880748:web:5bcf827c8bb4a9d12cd289"
+        "appId": "1:938227880748:web:5bcf827c8bb4a9d12cd289",
+        "measurementId": "G-1QXT7HTFE6"
       },
       "signInOptions": {
         "google": true,
@@ -24,3 +25,4 @@
     }
   }
 ]
+
