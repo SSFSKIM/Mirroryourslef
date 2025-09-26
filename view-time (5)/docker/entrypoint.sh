@@ -205,10 +205,10 @@ health_check() {
     # 백엔드 서비스가 시작될 때까지 대기
     sleep 5
     
-    if curl -f -s http://localhost:8000/health > /dev/null 2>&1; then
-        log_success "✅ 백엔드 서비스 정상"
+    if curl -f -s http://localhost:8080/health > /dev/null 2>&1; then
+        log_success "✅ 서비스 정상"
     else
-        log_warning "⚠️  백엔드 헬스 체크 실패 (서비스가 시작 중일 수 있습니다)"
+        log_warning "⚠️  헬스 체크 실패 (서비스가 시작 중일 수 있습니다)"
     fi
 }
 

@@ -80,8 +80,9 @@ RUN chmod +x /entrypoint.sh
 ENV PYTHONPATH=/app/backend
 ENV NODE_ENV=production
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD []
