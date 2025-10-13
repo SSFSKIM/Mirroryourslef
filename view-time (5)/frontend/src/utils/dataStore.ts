@@ -13,6 +13,45 @@ import {
 } from './firestore';
 import { Timestamp } from 'firebase/firestore';
 
+const isJsonContentType = (contentType: string | null) =>
+  typeof contentType === 'string' && contentType.toLowerCase().includes('application/json');
+
+const buildHttpError = async (response: Response, context: string): Promise<Error> => {
+  let message = `${context} (HTTP ${response.status}${response.statusText ? ` ${response.statusText}` : ''})`;
+
+  try {
+    const clone = response.clone();
+    const contentType = clone.headers.get('content-type');
+
+    if (isJsonContentType(contentType)) {
+      const data = await clone.json();
+      const detail = (data?.detail ?? data?.error ?? data?.message) as string | undefined;
+      if (detail) {
+        message += ` – ${detail}`;
+      }
+    } else {
+      const preview = (await clone.text()).trim();
+      if (preview) {
+        message += ` – ${preview.slice(0, 180)}`;
+      }
+    }
+  } catch (parseError) {
+    console.warn('Failed to inspect error response payload', parseError);
+  }
+
+  return new Error(message);
+};
+
+const normaliseFetchError = (error: unknown, fallback: string) => {
+  if (error instanceof Error) {
+    if (/failed to fetch/i.test(error.message) || /network/i.test(error.message)) {
+      return `${fallback}: backend unreachable. Ensure the FastAPI server is running on port 8000.`;
+    }
+    return `${fallback}: ${error.message}`;
+  }
+  return fallback;
+};
+
 // Types for liked videos analytics
 interface LikedVideosAnalytics {
   totalVideos: number;
@@ -145,7 +184,7 @@ const useDataStore = create<DataState>((set, get) => ({
           });
           
           // Load initial analytics data
-          get().loadSyncStatus();
+          await get().loadSyncStatus();
         } catch (error) {
           console.error('Error initializing user data:', error);
           set({ 
@@ -215,7 +254,7 @@ const useDataStore = create<DataState>((set, get) => ({
   
   // Load sync status data
   loadSyncStatus: async () => {
-    const { user } = get();
+    const { user, isSyncStatusLoading } = get();
 
     if (!user) {
       set({
@@ -225,18 +264,30 @@ const useDataStore = create<DataState>((set, get) => ({
       });
       return;
     }
-    
-    try {
-      set({ isSyncStatusLoading: true, syncStatusError: null });
-      
-      const response = await brain.get_sync_status();
-      const status = await response.json();
-      set({ syncStatus: status, isSyncStatusLoading: false });
 
-      const desiredSampleSize = status?.sample_size
-        ?? status?.sampleSize
-        ?? status?.preferred_sample_size
-        ?? 100;
+    if (isSyncStatusLoading) {
+      return;
+    }
+
+    set({ isSyncStatusLoading: true, syncStatusError: null });
+
+    try {
+      const response = await brain.get_sync_status();
+      if (!response.ok) {
+        throw await buildHttpError(response, 'Failed to load sync status');
+      }
+
+      let status: SyncStatus;
+      try {
+        status = await response.json();
+      } catch (parseError) {
+        throw new Error('Failed to parse sync status response as JSON.');
+      }
+
+      set({ syncStatus: status });
+
+      const desiredSampleSize =
+        status?.sample_size ?? status?.sampleSize ?? status?.preferred_sample_size ?? 100;
       const currentSampleSize = get().analyticsSampleSize;
       const analyticsLoaded = get().analytics;
 
@@ -249,17 +300,16 @@ const useDataStore = create<DataState>((set, get) => ({
       }
     } catch (error) {
       console.error('Error loading sync status:', error);
-      set({ 
-        syncStatusError: error as Error, 
-        isSyncStatusLoading: false 
-      });
-      throw error;
+      const message = normaliseFetchError(error, 'Failed to load sync status');
+      set({ syncStatusError: new Error(message) });
+    } finally {
+      set({ isSyncStatusLoading: false });
     }
   },
   
   // Load analytics data
   loadAnalytics: async (sampleSize?: number) => {
-    const { user, syncStatus, analyticsSampleSize: currentSampleSize } = get();
+    const { user, syncStatus, analyticsSampleSize: currentSampleSize, isAnalyticsLoading, analytics } = get();
 
     if (!user) {
       set({
@@ -269,31 +319,41 @@ const useDataStore = create<DataState>((set, get) => ({
       });
       return;
     }
-    
+
+    if (isAnalyticsLoading) {
+      return;
+    }
+
     const desiredSampleSize = sampleSize
       ?? syncStatus?.sample_size
       ?? syncStatus?.sampleSize
       ?? syncStatus?.preferred_sample_size
       ?? currentSampleSize
       ?? 100;
-    
+
+    if (analytics && currentSampleSize === desiredSampleSize) {
+      return;
+    }
+
+    set({ isAnalyticsLoading: true, analyticsError: null });
+
     try {
-      set({ isAnalyticsLoading: true, analyticsError: null });
-      
       const response = await brain.get_analytics({ sample_size: desiredSampleSize });
-      const analytics = await response.json();
-      set({ 
-        analytics, 
+      if (!response.ok) {
+        throw await buildHttpError(response, 'Failed to load analytics');
+      }
+
+      const analyticsPayload = await response.json();
+      set({
+        analytics: analyticsPayload,
         analyticsSampleSize: desiredSampleSize,
-        isAnalyticsLoading: false 
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
-      set({ 
-        analyticsError: error as Error, 
-        isAnalyticsLoading: false 
-      });
-      throw error;
+      const message = normaliseFetchError(error, 'Failed to load analytics');
+      set({ analyticsError: new Error(message) });
+    } finally {
+      set({ isAnalyticsLoading: false });
     }
   },
   
@@ -312,41 +372,17 @@ const useDataStore = create<DataState>((set, get) => ({
       });
       return;
     }
-    
-    try {
-      set({
-        isSyncStatusLoading: true,
-        isAnalyticsLoading: true,
-        syncStatusError: null,
-        analyticsError: null
-      });
-      
-      const statusResponse = await brain.get_sync_status();
-      const status = await statusResponse.json();
-      const desiredSampleSize = status?.sample_size
-        ?? status?.sampleSize
-        ?? status?.preferred_sample_size
-        ?? 100;
 
-      const analyticsResponse = await brain.get_analytics({ sample_size: desiredSampleSize });
-      const analytics = await analyticsResponse.json();
-      
-      set({
-        syncStatus: status,
-        analytics,
-        analyticsSampleSize: desiredSampleSize,
-        isSyncStatusLoading: false,
-        isAnalyticsLoading: false
-      });
+    try {
+      await get().loadSyncStatus();
+      await get().loadAnalytics();
     } catch (error) {
       console.error('Error refreshing data:', error);
+      const message = normaliseFetchError(error, 'Failed to refresh analytics data');
       set({
-        syncStatusError: error as Error,
-        analyticsError: error as Error,
-        isSyncStatusLoading: false,
-        isAnalyticsLoading: false
+        syncStatusError: new Error(message),
+        analyticsError: new Error(message),
       });
-      throw error;
     }
   },
   

@@ -1,0 +1,27 @@
+.git
+.DS_Store
+**/.cache
+**/.pytest_cache
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+
+# Python
+**/.venv
+**/venv
+
+# Node/Yarn
+**/node_modules
+**/.yarn/install-state.gz
+**/.pnp.data.json
+**/.next
+**/dist
+**/build
+
+# Logs & local env
+**/*.log
+.env*
+cloudrun.env*
+
+# Docker build outputs
+docker-build.log

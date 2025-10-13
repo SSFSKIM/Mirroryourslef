@@ -1,105 +1,57 @@
-# Multi-stage build for YouTube Stats App
-FROM ubuntu:22.04 AS frontend-builder
+# syntax=docker/dockerfile:1.6
 
+##############################
+# Frontend build stage
+##############################
+FROM node:20-bullseye AS frontend-builder
 WORKDIR /app/frontend
 
-# Install Node.js and Yarn
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g yarn \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set build-time environment variables for Vite
-ARG VITE_FIREBASE_API_KEY
-ARG VITE_FIREBASE_AUTH_DOMAIN
-ARG VITE_FIREBASE_PROJECT_ID
-ARG VITE_FIREBASE_STORAGE_BUCKET
-ARG VITE_FIREBASE_MESSAGING_SENDER_ID
-ARG VITE_FIREBASE_APP_ID
-ARG VITE_FIREBASE_MEASUREMENT_ID
-
-ENV VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY
-ENV VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN
-ENV VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID
-ENV VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET
-ENV VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID
-ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
-ENV VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID
-
-# Copy all frontend files at once (includes Yarn PnP files)
 COPY frontend/ ./
-RUN corepack enable && yarn install --immutable && yarn build
 
-# Python backend stage
-FROM ubuntu:22.04 AS backend-base
+# Ensure Yarn 4 is available and install dependencies
+RUN corepack enable \
+    && corepack prepare yarn@4.10.2 --activate \
+    && yarn install --immutable
 
-# Install system dependencies and Python
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    git \
-    python3 \
-    python3-pip \
-    python3-venv \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+ENV NODE_ENV=production
+RUN yarn build
 
-WORKDIR /app/backend
+##############################
+# Production runtime image
+##############################
+FROM python:3.11-slim AS runtime
 
-# Install Python dependencies
-COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy backend source
-COPY backend/ ./
-
-# Final production stage
-FROM ubuntu:22.04 AS production
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    nginx \
-    supervisor \
-    python3 \
-    python3-pip \
-    netcat-openbsd \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/usr/local/bin:${PATH}"
 
 WORKDIR /app
 
-# Copy Python dependencies from backend-base
-COPY --from=backend-base /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
-COPY --from=backend-base /usr/local/bin /usr/local/bin
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        nginx \
+        supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy built frontend
-COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+COPY backend/requirements.txt /app/backend/requirements.txt
 
-# Copy backend source
-COPY --from=backend-base /app/backend /app/backend
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r backend/requirements.txt
 
-# Nginx configuration
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY backend/ /app/backend/
+RUN find /app/backend -name "__pycache__" -type d -prune -exec rm -rf {} +
 
-# Supervisor configuration
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/* && mkdir -p /usr/share/nginx/html
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
-# Entrypoint script
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN mkdir -p /var/log/supervisor
 
-# Environment variables
-ENV PYTHONPATH=/app/backend
-ENV NODE_ENV=production
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+EXPOSE 80
 
-EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://127.0.0.1/health || exit 1
 
-ENTRYPOINT ["/entrypoint.sh"]
-CMD []
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
