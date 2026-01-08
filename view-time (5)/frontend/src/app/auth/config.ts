@@ -92,7 +92,7 @@ const extensionDefaults = {
     emailAndPassword: false,
     magicLink: false,
   },
-  siteName: "ViewTime",
+  siteName: "MirrorYourself",
   signInSuccessUrl: "/",
 };
 

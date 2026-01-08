@@ -80,7 +80,9 @@ export default function YouTubeSyncButton() {
       setNeedsAuth(false);
       
     } catch (error: any) {
-      console.log('Need to authenticate with YouTube:', error);
+      if (import.meta.env.DEV) {
+        console.log('Need to authenticate with YouTube:', error);
+      }
       setNeedsAuth(true);
     }
   };
@@ -136,8 +138,10 @@ export default function YouTubeSyncButton() {
       
       // Store the access token temporarily
       sessionStorage.setItem('youtube_access_token', accessToken);
-      
-      console.log('YouTube authentication successful');
+
+      if (import.meta.env.DEV) {
+        console.log('YouTube authentication successful');
+      }
       setNeedsAuth(false);
       
       // Proceed with sync
@@ -164,7 +168,9 @@ export default function YouTubeSyncButton() {
       
       // If no stored token or if we want to ensure fresh token, authenticate
       if (!accessToken) {
-        console.log('No access token found, initiating authentication...');
+        if (import.meta.env.DEV) {
+          console.log('No access token found, initiating authentication...');
+        }
         await authenticateWithYouTube();
         return; // authenticateWithYouTube will call syncYouTubeLikedVideos
       }
@@ -179,13 +185,17 @@ export default function YouTubeSyncButton() {
         });
         
         if (!testResponse.ok) {
-          console.log('Stored token is invalid, re-authenticating...');
+          if (import.meta.env.DEV) {
+            console.log('Stored token is invalid, re-authenticating...');
+          }
           sessionStorage.removeItem('youtube_access_token');
           await authenticateWithYouTube();
           return; // authenticateWithYouTube will call syncYouTubeLikedVideos
         }
       } catch (error) {
-        console.log('Token validation failed, re-authenticating...', error);
+        if (import.meta.env.DEV) {
+          console.log('Token validation failed, re-authenticating...', error);
+        }
         sessionStorage.removeItem('youtube_access_token');
         await authenticateWithYouTube();
         return; // authenticateWithYouTube will call syncYouTubeLikedVideos
@@ -222,8 +232,10 @@ export default function YouTubeSyncButton() {
         sampleSize: selectedSampleSize,
       });
 
-      console.log('Liked videos sync completed successfully:', data);
-      
+      if (import.meta.env.DEV) {
+        console.log('Liked videos sync completed successfully:', data);
+      }
+
       // Refresh sync status to get updated analytics info
       setTimeout(() => {
         checkSyncStatus();

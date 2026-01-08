@@ -1,8 +1,9 @@
-import React, { useRef } from "react";
-import { Upload, Trash2, CheckCircle2, AlertCircle, Loader2, FileText } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Upload, Trash2, CheckCircle2, AlertCircle, Loader2, FileText, Download, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
 interface WatchHistoryUploadCardProps {
@@ -11,6 +12,9 @@ interface WatchHistoryUploadCardProps {
 
 const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ className = "" }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
+
   const {
     status,
     isUploading,
@@ -21,18 +25,78 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
     deleteHistory,
   } = useWatchHistoryStore();
 
+  const validateFile = (file: File): string | null => {
+    // Check file extension
+    const validExtensions = ['.json', '.zip'];
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!hasValidExtension) {
+      return "Please upload a .json or .zip file from Google Takeout";
+    }
+
+    // Check file size (max 500MB)
+    const maxSize = 500 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return "File size too large. Maximum 500MB allowed.";
+    }
+
+    // Check minimum size (at least 1KB)
+    if (file.size < 1024) {
+      return "File seems too small. Please ensure it's a valid Takeout file.";
+    }
+
+    return null;
+  };
+
   const handleFileSelect = () => {
     fileInputRef.current?.click();
+  };
+
+  const processFile = async (file: File) => {
+    setFileValidationError(null);
+
+    // Validate file
+    const validationError = validateFile(file);
+    if (validationError) {
+      setFileValidationError(validationError);
+      return;
+    }
+
+    await uploadTakeout(file);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      await uploadTakeout(file);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      await processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processFile(file);
     }
   };
 
@@ -55,7 +119,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
           Upload your YouTube takeout data to unlock personalized viewing analytics and insights.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Status Display */}
         {isLoadingStatus ? (
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -74,20 +138,13 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
               )}
             </AlertDescription>
           </Alert>
-        ) : (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              No watch history data found. Upload your YouTube takeout to get started with personalized analytics.
-            </AlertDescription>
-          </Alert>
-        )}
+        ) : null}
 
         {/* Error Display */}
-        {error && (
+        {(error || fileValidationError) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{error || fileValidationError}</AlertDescription>
           </Alert>
         )}
 
@@ -99,38 +156,65 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
           </Alert>
         )}
 
-        {/* Upload Controls */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
+        {/* Upload Progress */}
+        {isUploading && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Processing your watch history...</span>
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            </div>
+            <Progress value={undefined} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">
+              ⏱️ This usually takes 2-5 minutes depending on file size
+            </p>
+          </div>
+        )}
+
+        {/* Drag & Drop Zone */}
+        {!isUploading && (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`
+              relative border-2 border-dashed rounded-lg p-8 text-center transition-all
+              ${isDragging
+                ? 'border-primary bg-primary/5 scale-[1.02]'
+                : 'border-muted hover:border-primary/50 hover:bg-accent/50'
+              }
+              ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            `}
             onClick={handleFileSelect}
-            disabled={isUploading}
-            className="flex-1"
           >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing Takeout...
-              </>
-            ) : (
-              <>
+            <div className="flex flex-col items-center gap-3">
+              <div className={`p-4 rounded-full ${isDragging ? 'bg-primary/10' : 'bg-muted'}`}>
+                <Upload className={`h-8 w-8 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-lg font-medium">
+                  {isDragging ? 'Drop your file here' : 'Drop your Takeout file here'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  or click to browse • Accepts .json or .zip files
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFileSelect();
+                }}
+              >
                 <Upload className="mr-2 h-4 w-4" />
-                {hasData ? "Replace Data" : "Process Takeout"}
-              </>
-            )}
-          </Button>
-          
-          {hasData && (
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isUploading}
-              size="sm"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete History
-            </Button>
-          )}
-        </div>
+                {hasData ? "Update Data" : "Choose File"}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
@@ -140,17 +224,93 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
           className="hidden"
         />
 
-        {/* Instructions */}
-        <div className="text-sm text-muted-foreground space-y-2">
-          <p><strong>How to get your YouTube takeout:</strong></p>
-          <ol className="list-decimal list-inside space-y-1 pl-2">
-            <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Takeout</a></li>
-            <li>Select "YouTube and YouTube Music"</li>
-            <li>Choose "watch-history.json" only</li>
-            <li>Download and upload the file here</li>
-          </ol>
-          <p className="text-xs mt-2">
-            <strong>Privacy:</strong> Your data is processed and stored securely. You can delete it anytime.
+        {/* Delete Button (only show if data exists) */}
+        {hasData && !isUploading && (
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            size="sm"
+            className="w-full"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete All Watch History Data
+          </Button>
+        )}
+
+        {/* Step-by-Step Guide */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Download className="h-4 w-4 text-primary" />
+            <h4 className="font-semibold text-sm">How to Get Your YouTube Takeout</h4>
+          </div>
+
+          <div className="space-y-3 pl-6">
+            {/* Step 1 */}
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                1
+              </div>
+              <div className="flex-1 text-sm space-y-1">
+                <p className="font-medium">Visit Google Takeout</p>
+                <a
+                  href="https://takeout.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  takeout.google.com
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                2
+              </div>
+              <div className="flex-1 text-sm">
+                <p className="font-medium mb-1">Select YouTube Data</p>
+                <p className="text-muted-foreground">Click "Deselect all" → Check only "YouTube and YouTube Music"</p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                3
+              </div>
+              <div className="flex-1 text-sm">
+                <p className="font-medium mb-1">Choose History Only</p>
+                <p className="text-muted-foreground">Click "All YouTube data included" → Select only "watch-history.json"</p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                4
+              </div>
+              <div className="flex-1 text-sm">
+                <p className="font-medium mb-1">Download & Upload</p>
+                <p className="text-muted-foreground">Click "Next step" → "Create export" → Wait for email → Download → Upload here</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Time Estimate */}
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-900 dark:text-blue-100">
+              <strong>⏱️ Expected time:</strong> Google Takeout preparation takes 15-30 minutes.
+              You'll receive an email when ready. File processing takes 2-5 minutes after upload.
+            </AlertDescription>
+          </Alert>
+
+          {/* Privacy Note */}
+          <p className="text-xs text-muted-foreground border-t pt-3">
+            <strong>🔒 Privacy:</strong> Your watch history is processed and stored securely in your private account.
+            We never share your data with third parties. You can delete it anytime using the button above.
           </p>
         </div>
       </CardContent>

@@ -156,11 +156,41 @@ class LikedVideosStorage:
             print(f"Error getting liked videos count for user {user_id}: {e}")
             return 0
     
+    def _build_category_breakdown(
+        self,
+        category_counts: Dict[str, Any],
+        category_percentages: Dict[str, Any],
+        category_durations: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Construct a normalized category breakdown list."""
+        breakdown: List[Dict[str, Any]] = []
+
+        for category, count in category_counts.items():
+            percentage = category_percentages.get(category, 0.0)
+            total_watch_time = category_durations.get(category, 0)
+
+            breakdown.append(
+                {
+                    "category": category,
+                    "count": int(count),
+                    "percentage": float(percentage),
+                    "total_watch_time": int(total_watch_time),
+                }
+            )
+
+        breakdown.sort(key=lambda item: item["count"], reverse=True)
+
+        return breakdown
+
     async def store_analytics(self, user_id: str, analytics: LikedVideosAnalytics) -> bool:
         """Store complete analytics for a user"""
         try:
             storage_key = f"analytics_{user_id}_{analytics.sample_size}"
             
+            category_counts = {k.value: v for k, v in analytics.category_stats.category_counts.items()}
+            category_percentages = {k.value: v for k, v in analytics.category_stats.category_percentages.items()}
+            category_total_duration = {k.value: v for k, v in analytics.category_stats.category_total_duration.items()}
+
             analytics_data = {
                 "user_id": analytics.user_id,
                 "sample_size": analytics.sample_size,
@@ -178,10 +208,14 @@ class LikedVideosStorage:
                 
                 # Category stats
                 "category_stats": {
-                    "category_counts": {k.value: v for k, v in analytics.category_stats.category_counts.items()},
-                    "category_percentages": {k.value: v for k, v in analytics.category_stats.category_percentages.items()},
+                    "category_counts": category_counts,
+                    "category_percentages": category_percentages,
+                    "category_total_duration": category_total_duration,
                     "top_categories": [cat.value for cat in analytics.category_stats.top_categories]
                 },
+                "category_breakdown": self._build_category_breakdown(
+                    category_counts, category_percentages, category_total_duration
+                ),
                 
                 # Channel stats
                 "channel_stats": {
@@ -189,7 +223,16 @@ class LikedVideosStorage:
                     "top_channels": analytics.channel_stats.top_channels,
                     "total_unique_channels": analytics.channel_stats.total_unique_channels,
                     "average_likes_per_channel": analytics.channel_stats.average_likes_per_channel,
-                    "channel_diversity_score": analytics.channel_stats.channel_diversity_score
+                    "channel_diversity_score": analytics.channel_stats.channel_diversity_score,
+                    "channel_info_map": {
+                        channel_id: {
+                            "channel_id": info.channel_id,
+                            "channel_title": info.channel_title,
+                            "channel_url": info.channel_url,
+                            "subscriber_count": info.subscriber_count
+                        }
+                        for channel_id, info in (analytics.channel_stats.channel_info_map or {}).items()
+                    }
                 },
                 
                 # Length stats
@@ -241,7 +284,27 @@ class LikedVideosStorage:
         """Retrieve analytics for a user and sample size"""
         try:
             storage_key = f"analytics_{user_id}_{sample_size}"
-            return kv_store.get_json(storage_key, default=None)
+            analytics = kv_store.get_json(storage_key, default=None)
+
+            if not analytics:
+                return None
+
+            category_stats = analytics.get("category_stats", {})
+
+            # Backfill category total duration if missing (legacy data)
+            if "category_total_duration" not in category_stats:
+                category_stats["category_total_duration"] = {}
+
+            category_counts = category_stats.get("category_counts", {})
+            category_percentages = category_stats.get("category_percentages", {})
+            category_durations = category_stats.get("category_total_duration", {})
+
+            if "category_breakdown" not in analytics and category_counts:
+                analytics["category_breakdown"] = self._build_category_breakdown(
+                    category_counts, category_percentages, category_durations
+                )
+
+            return analytics
             
         except Exception as e:
             print(f"Error retrieving analytics for user {user_id}: {e}")

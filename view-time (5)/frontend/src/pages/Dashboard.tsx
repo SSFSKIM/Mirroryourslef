@@ -4,11 +4,14 @@ import { UserProfile } from "components/UserProfile";
 import YouTubeSyncButton from "components/YouTubeSyncButton";
 import LikedVideosStats from "components/LikedVideosStats";
 import ShortsVsRegularChart from "components/ShortsVsRegularChart";
-import { WatchTimeHeatMap } from "components/WatchTimeHeatMap";
+import { TopKeywords } from "components/TopKeywords";
 import { VideoLengthDistribution } from "components/VideoLengthDistribution";
 import { TopChannels } from "components/TopChannels";
+import { LikesTimeHeatmap } from "components/LikesTimeHeatmap";
+import { MonthlyTrendsChart } from "components/MonthlyTrendsChart";
+import { ChannelLoyaltyInsight } from "components/ChannelLoyaltyInsight";
 import { CategoryDistribution } from "components/CategoryDistribution";
-import { WatchThroughPercentage } from "components/WatchThroughPercentage";
+import { ShortsCircularProgress } from "components/ShortsCircularProgress";
 import WatchHistoryUploadCard from "components/WatchHistoryUploadCard";
 import { WatchHistoryHighlights } from "components/WatchHistoryHighlights";
 import { ViewingHeatmap } from "components/ViewingHeatmap";
@@ -17,6 +20,7 @@ import { InAppNudges } from "components/InAppNudges";
 import { RecommendationBreakdown } from "components/RecommendationBreakdown";
 import { SessionDurationChart } from "components/SessionDurationChart";
 import useWatchHistoryStore from "utils/watchHistoryStore";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -26,6 +30,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Initialize Firebase on component mount
     import("utils/auth").then(() => {
+      // Only log in development
       console.log("Firebase authentication initialized in Dashboard");
     });
   }, []);
@@ -60,79 +65,105 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p>Welcome to your YouTube analytics dashboard!</p>
+        <p className="text-muted-foreground mb-8">Welcome to your YouTube analytics dashboard!</p>
 
-        {/* YouTube Sync Section */}
-        <div className="mt-8 mb-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Data Synchronization</h2>
-          <div className="mb-6">
-            <YouTubeSyncButton />
-          </div>
-        </div>
+        <Tabs defaultValue="liked-videos" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+            <TabsTrigger value="liked-videos" className="text-sm sm:text-base">
+              Liked Videos
+            </TabsTrigger>
+            <TabsTrigger value="watch-history" className="text-sm sm:text-base">
+              Watch History
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Liked Videos Summary Analytics */}
-        <div className="mt-8 mb-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Liked Videos Overview</h2>
-          <LikedVideosStats className="mb-6" />
+          {/* Liked Videos Tab */}
+          <TabsContent value="liked-videos" className="space-y-8">
+            {/* YouTube Sync Section */}
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-4">Data Synchronization</h2>
+              <YouTubeSyncButton />
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="col-span-1">
-              <ShortsVsRegularChart />
-            </div>
-            {/* Placeholder for future analytics component */}
-            <div className="col-span-1">
-              <CategoryDistribution className="w-full h-full" />
-            </div>
-          </div>
-        </div>
+            {/* Liked Videos Overview */}
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-4">Overview</h2>
+              <LikedVideosStats className="mb-6" />
 
-        {/* Detailed Analytics Dashboard */}
-        <div className="mt-8 mb-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Analytics</h2>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-            <div className="col-span-1 xl:col-span-3">
-              <WatchTimeHeatMap className="w-full" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-            <div className="col-span-1 lg:col-span-1 xl:col-span-2">
-              <VideoLengthDistribution className="w-full h-full" />
-            </div>
-            <div className="col-span-1">
-              <WatchThroughPercentage className="w-full h-full" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="col-span-1">
-              <TopChannels className="w-full h-full" limit={10} />
-            </div>
-            <div className="col-span-1">
-              <CategoryDistribution className="w-full h-full" />
-            </div>
-          </div>
-        </div>
-
-        {/* Watch History Insights */}
-        <div className="mt-12 mb-8 space-y-6">
-          <h2 className="text-2xl font-bold tracking-tight">Watch History Insights</h2>
-          <WatchHistoryUploadCard />
-          <WatchHistoryHighlights />
-          {hasWatchHistory && (
-            <>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <SessionDurationChart className="w-full" />
-                <RecommendationBreakdown className="w-full" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <ShortsVsRegularChart />
+                <CategoryDistribution className="w-full h-full" />
               </div>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ViewingHeatmap className="w-full" />
-                <InAppNudges className="w-full" />
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ChannelLoyaltyInsight className="w-full h-full" />
               </div>
-              <RepeatWatchList />
-            </>
-          )}
-        </div>
+            </div>
+
+            {/* Detailed Analytics */}
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Analytics</h2>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                <div className="col-span-1 xl:col-span-3">
+                  <TopKeywords className="w-full" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                <div className="col-span-1 lg:col-span-1 xl:col-span-2">
+                  <VideoLengthDistribution className="w-full h-full" />
+                </div>
+                <div className="col-span-1">
+                  <ShortsCircularProgress className="w-full h-full" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 mb-6">
+                <MonthlyTrendsChart className="w-full" />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <TopChannels className="w-full h-full" limit={10} />
+                <LikesTimeHeatmap className="w-full h-full" />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Watch History Tab */}
+          <TabsContent value="watch-history" className="space-y-8">
+            {/* Upload Section */}
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-4">Upload Your Data</h2>
+              <WatchHistoryUploadCard />
+            </div>
+
+            {/* Highlights */}
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-4">Key Metrics</h2>
+              <WatchHistoryHighlights />
+            </div>
+
+            {/* Detailed Insights */}
+            {hasWatchHistory && (
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Insights</h2>
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+                  <SessionDurationChart className="w-full" />
+                  <RecommendationBreakdown className="w-full" />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+                  <ViewingHeatmap className="w-full" />
+                  <InAppNudges className="w-full" />
+                </div>
+
+                <RepeatWatchList />
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

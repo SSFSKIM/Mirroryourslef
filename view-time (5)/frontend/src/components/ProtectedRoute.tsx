@@ -13,7 +13,9 @@ export function ProtectedRoute({ children }: Props) {
   useEffect(() => {
     // Initialize Firebase on component mount
     import("utils/auth").then(() => {
-      console.log("Firebase authentication initialized in ProtectedRoute");
+      if (import.meta.env.DEV) {
+        console.log("Firebase authentication initialized in ProtectedRoute");
+      }
     });
   }, []);
 

@@ -10,7 +10,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       <FirestoreInitializer>
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow">{children}</main>
-          <footer className="bg-black text-gray-400 py-8 px-6">
+          <footer className="bg-background border-t border-border text-muted-foreground py-8 px-6">
             <div className="container mx-auto text-center">
               <Link to="/" className="no-underline">
                 <div className="flex items-center justify-center mb-4">
@@ -19,7 +19,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
                     alt="MirrorYourself Logo"
                     className="h-8 w-8 mr-2"
                   />
-                  <span className="text-white text-lg font-semibold">
+                  <span className="text-foreground text-lg font-semibold">
                     MirrorYourself
                   </span>
                 </div>
@@ -29,10 +29,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
                 reserved.
               </p>
               <div className="text-sm">
-                <Link to="/privacy-policy" className="hover:underline">
+                <Link to="/privacy-policy" className="text-primary hover:underline">
                   Privacy Policy
                 </Link>
-                <Link to="/terms-of-service" className="hover:underline ml-4">
+                <Link to="/terms-of-service" className="text-primary hover:underline ml-4">
                   Terms of Service
                 </Link>
               </div>

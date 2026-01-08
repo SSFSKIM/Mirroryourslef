@@ -18,8 +18,29 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
     }
   }, [analytics, loadAnalytics]);
 
-  const topChannels = analytics?.channelStats?.topChannels || [];
-  const maxVideoCount = topChannels.length > 0 ? topChannels[0].videoCount : 1;
+  const channelStats = analytics?.channel_stats || analytics?.channelStats;
+  const topChannelsData = channelStats?.top_channels || channelStats?.topChannels || [];
+  const channelLikeCounts = channelStats?.channel_like_counts || channelStats?.channelLikeCounts || {};
+  const channelInfoMap = channelStats?.channel_info_map || channelStats?.channelInfoMap || {};
+
+  // Transform top_channels from list of IDs to list of objects with name and count
+  const topChannels = React.useMemo(() => {
+    if (!topChannelsData || !Array.isArray(topChannelsData)) return [];
+
+    return topChannelsData
+      .map(channelId => {
+        const videoCount = channelLikeCounts[channelId] || 0;
+        const channelInfo = channelInfoMap[channelId];
+        return {
+          channel_id: channelId,
+          channel_name: channelInfo?.channel_title || 'Unknown Channel',
+          video_count: videoCount
+        };
+      })
+      .filter(channel => channel.video_count > 0);
+  }, [topChannelsData, channelLikeCounts, channelInfoMap]);
+
+  const maxVideoCount = topChannels.length > 0 ? topChannels[0].video_count : 1;
 
   // Derive active sample size (N)
   const nUsed = React.useMemo(() => {
@@ -56,34 +77,47 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {topChannels.slice(0, limit).map((channel, index) => (
-              <div key={channel.channelName} className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-800 text-sm font-semibold">
-                  {index + 1}
-                </div>
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={`https://via.placeholder.com/40?text=${channel.channelName.charAt(0)}`} />
-                  <AvatarFallback>{channel.channelName.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
+            {topChannels.slice(0, limit).map((channel, index) => {
+              // Support both snake_case and camelCase
+              const channelId = channel.channel_id || channel.channelId || '';
+              const channelName = channel.channel_name || channel.channelName || 'Unknown';
+              const videoCount = channel.video_count || channel.videoCount || 0;
+
+              // Get channel info from map if available
+              const channelInfo = channelInfoMap[channelId];
+              const thumbnailUrl = channelInfo?.thumbnailUrl ||
+                                  channelInfo?.thumbnail_url ||
+                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=ef4444&color=fff&size=40&bold=true`;
+
+              return (
+                <div key={channelName + index} className="flex items-center space-x-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-800 text-sm font-semibold">
+                    {index + 1}
+                  </div>
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={thumbnailUrl} alt={channelName} />
+                    <AvatarFallback>{channelName.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {channel.channelName}
+                    {channelName}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {channel.videoCount} liked videos
+                    {videoCount} liked videos
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Progress 
-                    value={(channel.videoCount / maxVideoCount) * 100} 
-                    className="w-20 h-2" 
+                  <Progress
+                    value={(videoCount / maxVideoCount) * 100}
+                    className="w-20 h-2"
                   />
                   <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[2rem] text-right">
-                    {channel.videoCount}
+                    {videoCount}
                   </span>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </CardContent>

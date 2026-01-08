@@ -2,6 +2,7 @@ import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useDataStore from "utils/dataStore";
+import { Button } from "@/components/ui/button";
 
 interface CategoryDistributionProps {
   className?: string;
@@ -53,7 +54,7 @@ const COLORS = [
 ];
 
 export function CategoryDistribution({ className = "" }: CategoryDistributionProps) {
-  const { analytics, isAnalyticsLoading, analyticsError, loadAnalytics } = useDataStore();
+  const { analytics, isAnalyticsLoading, analyticsError, loadAnalytics, loadSyncStatus } = useDataStore();
   
   React.useEffect(() => {
     if (!analytics) {
@@ -63,14 +64,32 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
   
   const categoryDistribution = analytics?.categoryBreakdown || [];
   
-  // Format data for the donut chart
   const formattedData = React.useMemo(() => {
-    if (!categoryDistribution || categoryDistribution.length === 0) return [];
-    const totalCount = categoryDistribution.reduce((acc, curr) => acc + curr.count, 0);
-    return categoryDistribution.map(item => ({
-      ...item,
-      percentage: (item.count / totalCount) * 100
-    }));
+    if (!Array.isArray(categoryDistribution) || categoryDistribution.length === 0) {
+      return [];
+    }
+
+    const totalCount = categoryDistribution.reduce((acc: number, curr: any) => acc + (curr?.count ?? 0), 0) || 1;
+
+    return categoryDistribution
+      .map((item: any) => {
+        const count = typeof item?.count === "number" ? item.count : Number(item?.count ?? 0);
+        const percentage = typeof item?.percentage === "number"
+          ? item.percentage
+          : (count / totalCount) * 100;
+        const totalWatchTime = typeof item?.totalWatchTime === "number"
+          ? item.totalWatchTime
+          : Number(item?.total_watch_time ?? 0);
+
+        return {
+          category: item?.category ?? "Other",
+          count,
+          percentage,
+          totalWatchTime,
+        };
+      })
+      .filter((item) => item.count > 0)
+      .sort((a, b) => b.count - a.count);
   }, [categoryDistribution]);
   
   // Derive active sample size (N)
@@ -80,6 +99,36 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
     const topLevelN = (analytics as any)?.sample_size ?? (analytics as any)?.analytics?.sample_size;
     return (topLevelN as number) ?? totalCount ?? 0;
   }, [analytics, categoryDistribution]);
+
+  const topCategories = React.useMemo(() => formattedData.slice(0, 3), [formattedData]);
+
+  const aggregateWatchTime = React.useMemo(
+    () => formattedData.reduce((acc, curr) => acc + (curr.totalWatchTime || 0), 0),
+    [formattedData]
+  );
+
+  const formatWatchTime = React.useCallback((seconds: number) => {
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      return null;
+    }
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.round((seconds % 3600) / 60);
+
+    if (hours === 0) {
+      return `${minutes}m`;
+    }
+
+    if (minutes === 0) {
+      return `${hours}h`;
+    }
+
+    return `${hours}h ${minutes}m`;
+  }, []);
+
+  const readableWatchTime = React.useMemo(
+    () => formatWatchTime(aggregateWatchTime),
+    [aggregateWatchTime, formatWatchTime]
+  );
   
   // Custom label renderer for the donut chart
   const renderCustomizedLabel = (props: any) => {
@@ -123,40 +172,60 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
           <div className="text-center text-red-500 py-8">
             Error loading analytics data
           </div>
-        ) : !categoryDistribution || categoryDistribution.length === 0 ? (
+        ) : formattedData.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            No category data available yet. Sync your YouTube liked videos to see your distribution.
+            <p>No category data available yet. Sync your YouTube liked videos to see your distribution.</p>
+            <Button className="mt-4" variant="outline" onClick={() => void loadSyncStatus()}>
+              Sync liked videos
+            </Button>
           </div>
         ) : (
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={formattedData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomizedLabel}
-                  outerRadius={80}
-                  innerRadius={40}
-                  fill="#FF5252"
-                  dataKey="count"
-                  nameKey="category"
-                >
-                  {formattedData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  verticalAlign="bottom" 
-                  height={36}
-                  formatter={(value) => (
-                    <span className="text-sm text-muted-foreground">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="space-y-4">
+            <div className="h-72 w-full" role="img" aria-label="Liked videos by category">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={formattedData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={renderCustomizedLabel}
+                    outerRadius={80}
+                    innerRadius={40}
+                    fill="#FF5252"
+                    dataKey="count"
+                    nameKey="category"
+                  >
+                    {formattedData.map((entry, index) => (
+                      <Cell key={`cell-${entry.category}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-sm text-muted-foreground">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            {topCategories.length > 0 && (
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  Top categories:{" "}
+                  {topCategories
+                    .map((cat) => `${cat.category} (${Math.round(cat.percentage)}%)`)
+                    .join(" • ")}
+                </p>
+                {readableWatchTime && (
+                  <p className="mt-1">
+                    Covers approximately {readableWatchTime} of liked content.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

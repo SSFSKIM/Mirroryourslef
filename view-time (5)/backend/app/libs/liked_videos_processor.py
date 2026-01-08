@@ -111,7 +111,11 @@ class LikedVideosProcessor:
         videos_subset = liked_videos[:sample_size]
         
         for video in videos_subset:
-            category = VideoCategory(video.get('category_name', 'Other'))
+            raw_category = video.get('category_name', 'Other')
+            try:
+                category = VideoCategory(raw_category)
+            except ValueError:
+                category = VideoCategory.OTHER
             category_counts[category] += 1
             category_durations[category] += video.get('duration_seconds', 0)
         
@@ -311,11 +315,19 @@ class LikedVideosProcessor:
         regular_categories = Counter()
         
         for video in shorts_videos:
-            category = VideoCategory(video.get('category_name', 'Other'))
+            raw_category = video.get('category_name', 'Other')
+            try:
+                category = VideoCategory(raw_category)
+            except ValueError:
+                category = VideoCategory.OTHER
             shorts_categories[category] += 1
         
         for video in regular_videos:
-            category = VideoCategory(video.get('category_name', 'Other'))
+            raw_category = video.get('category_name', 'Other')
+            try:
+                category = VideoCategory(raw_category)
+            except ValueError:
+                category = VideoCategory.OTHER
             regular_categories[category] += 1
         
         # Channel analysis

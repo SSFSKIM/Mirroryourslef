@@ -77,6 +77,119 @@ interface LikedVideosAnalytics {
   };
 }
 
+interface CategorySegment {
+  category: string;
+  count: number;
+  percentage: number;
+  totalWatchTime: number;
+}
+
+const toNumber = (value: unknown, fallback = 0): number => {
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const buildCategoryBreakdown = (payload: any): CategorySegment[] => {
+  if (!payload || typeof payload !== 'object') {
+    return [];
+  }
+
+  const analyticsBlock = payload.analytics && typeof payload.analytics === 'object'
+    ? payload.analytics
+    : {};
+
+  const directBreakdown = Array.isArray(analyticsBlock.category_breakdown)
+    ? analyticsBlock.category_breakdown
+    : Array.isArray(payload.categoryBreakdown)
+      ? payload.categoryBreakdown
+      : [];
+
+  if (directBreakdown.length > 0) {
+    return directBreakdown
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') {
+          return null;
+        }
+        const category = typeof entry.category === 'string' ? entry.category : 'Other';
+        const count = toNumber(entry.count);
+        const percentage = toNumber(entry.percentage);
+        const totalWatchTime = toNumber(entry.total_watch_time ?? entry.totalWatchTime);
+        return {
+          category,
+          count,
+          percentage,
+          totalWatchTime,
+        } as CategorySegment;
+      })
+      .filter((entry): entry is CategorySegment => Boolean(entry && entry.count > 0))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  const categoryStats = analyticsBlock.category_stats && typeof analyticsBlock.category_stats === 'object'
+    ? analyticsBlock.category_stats
+    : {};
+
+  const counts = categoryStats.category_counts && typeof categoryStats.category_counts === 'object'
+    ? categoryStats.category_counts
+    : {};
+  const percentages = categoryStats.category_percentages && typeof categoryStats.category_percentages === 'object'
+    ? categoryStats.category_percentages
+    : {};
+  const durations = categoryStats.category_total_duration && typeof categoryStats.category_total_duration === 'object'
+    ? categoryStats.category_total_duration
+    : {};
+
+  const countEntries = Object.entries(counts);
+  if (countEntries.length === 0) {
+    return [];
+  }
+
+  const totalCount = countEntries.reduce((acc, [, value]) => acc + toNumber(value), 0) || 1;
+
+  return countEntries
+    .map(([category, rawCount]) => {
+      const count = toNumber(rawCount);
+      const totalWatchTime = toNumber(durations[category]);
+      const percentageSource = toNumber(percentages[category]);
+      const calculatedPercentage = (count / totalCount) * 100;
+      return {
+        category,
+        count,
+        percentage: percentageSource > 0 ? percentageSource : calculatedPercentage,
+        totalWatchTime,
+      } as CategorySegment;
+    })
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count);
+};
+
+const normalizeAnalyticsPayload = (payload: any) => {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  // Extract the analytics block (which contains the actual data)
+  const analyticsBlock = payload.analytics && typeof payload.analytics === 'object'
+    ? { ...payload.analytics }
+    : {};
+
+  // Flatten the structure - merge top-level fields with analytics block
+  const normalized = {
+    ...payload,
+    ...analyticsBlock, // Spread the analytics data to top level
+    analytics: analyticsBlock, // Keep original for backward compatibility
+  } as any;
+
+  // Build and add category breakdown
+  const breakdown = buildCategoryBreakdown(normalized);
+  normalized.categoryBreakdown = breakdown;
+  if (normalized.analytics) {
+    normalized.analytics.category_breakdown = breakdown;
+  }
+
+  return normalized;
+};
+
 interface SyncStatus {
   lastSynced?: string;
   totalVideos: number;
@@ -344,8 +457,9 @@ const useDataStore = create<DataState>((set, get) => ({
       }
 
       const analyticsPayload = await response.json();
+      const normalizedPayload = normalizeAnalyticsPayload(analyticsPayload);
       set({
-        analytics: analyticsPayload,
+        analytics: normalizedPayload,
         analyticsSampleSize: desiredSampleSize,
       });
     } catch (error) {
