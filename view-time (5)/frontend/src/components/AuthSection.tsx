@@ -18,7 +18,7 @@ export function AuthSection({ className = '' }: Props) {
           <Link to="/dashboard">Dashboard</Link>
         </Button>
       )}
-      <GoogleAuthButton size="sm" />
+      <GoogleAuthButton size="default" />
     </div>
   );
 }

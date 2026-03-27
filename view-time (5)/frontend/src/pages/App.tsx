@@ -217,20 +217,20 @@ export default function App() {
               <span className="text-sm text-muted-foreground font-display">
                 MirrorYourself
               </span>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Link
                   to="/privacy-policy"
-                  className="hover:text-foreground transition-colors"
+                  className="hover:text-foreground transition-colors py-2 px-2"
                 >
                   Privacy Policy
                 </Link>
                 <Link
                   to="/terms-of-service"
-                  className="hover:text-foreground transition-colors"
+                  className="hover:text-foreground transition-colors py-2 px-2"
                 >
                   Terms of Service
                 </Link>
-                <span>
+                <span className="py-2 px-2">
                   &copy; {new Date().getFullYear()} MirrorYourself
                 </span>
               </div>
