@@ -83,7 +83,7 @@ export default function App() {
 
         <main id="main-content">
           {/* ─── Hero Section ─── */}
-          <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
+          <section className="relative overflow-hidden min-h-[70vh] flex items-center justify-center">
             {/* Atmospheric orbs */}
             <Atmosphere
               variant="primary"
