@@ -11,7 +11,6 @@ import { GlassCard } from "components/GlassCard";
 import { Atmosphere } from "components/Atmosphere";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem, scrollRevealProps } from "@/lib/motion";
-import { BarChart3, Clock, Sparkles } from "lucide-react";
 
 export default function App() {
   const { initializeAuth, user } = useDataStore();
@@ -34,27 +33,6 @@ export default function App() {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  const features = [
-    {
-      icon: BarChart3,
-      title: "Viewing Patterns",
-      description:
-        "Heatmaps reveal when you watch, how often, and the rhythms hidden inside your daily routine.",
-    },
-    {
-      icon: Sparkles,
-      title: "Content DNA",
-      description:
-        "Discover which categories, creators, and topics define your unique viewing fingerprint.",
-    },
-    {
-      icon: Clock,
-      title: "Session Insights",
-      description:
-        "Understand how long and how deep you go — from casual browsing to marathon binge sessions.",
-    },
-  ];
 
   return (
     <AuthProvider>
@@ -138,11 +116,11 @@ export default function App() {
           {/* ─── Features Section ─── */}
           <section id="features" className="py-24 scroll-mt-24">
             <div className="container mx-auto px-4">
-              <motion.div {...scrollRevealProps} className="text-center mb-16">
+              <motion.div {...scrollRevealProps} className="mb-16 max-w-2xl">
                 <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">
                   What you'll discover
                 </h2>
-                <p className="text-muted-foreground max-w-xl mx-auto">
+                <p className="text-muted-foreground">
                   Your viewing data, decoded and illuminated.
                 </p>
               </motion.div>
@@ -152,32 +130,49 @@ export default function App() {
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
               >
-                {features.map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <GlassCard
-                      key={feature.title}
-                      stagger
-                      hover
-                      className="flex flex-col items-start gap-4"
-                    >
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon
-                          className="w-6 h-6 text-primary"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <h3 className="font-display text-xl font-semibold">
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </GlassCard>
-                  );
-                })}
+                {/* Primary feature — spans full width on mobile, left column on desktop */}
+                <GlassCard stagger hover className="flex flex-col gap-4 md:row-span-2">
+                  <span className="text-xs font-mono text-primary tracking-widest uppercase">
+                    Viewing Patterns
+                  </span>
+                  <h3 className="font-display text-2xl sm:text-3xl font-semibold leading-tight">
+                    Heatmaps that reveal your daily rhythms
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    When do you watch? How often? What routines are hiding in
+                    plain sight? Your viewing patterns, laid out as a heat
+                    signature only you can decode.
+                  </p>
+                </GlassCard>
+
+                {/* Secondary features — right column, stacked */}
+                <GlassCard stagger hover className="flex flex-col gap-3">
+                  <span className="text-xs font-mono text-primary tracking-widest uppercase">
+                    Content DNA
+                  </span>
+                  <h3 className="font-display text-xl font-semibold">
+                    Categories, creators, and topics that define you
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Your unique viewing fingerprint — which creators you orbit,
+                    which genres pull you in, and how your taste evolves.
+                  </p>
+                </GlassCard>
+
+                <GlassCard stagger hover className="flex flex-col gap-3">
+                  <span className="text-xs font-mono text-primary tracking-widest uppercase">
+                    Session Insights
+                  </span>
+                  <h3 className="font-display text-xl font-semibold">
+                    From casual scroll to deep dive
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    How long and how deep you go. Casual browsing vs marathon
+                    sessions, measured and mapped.
+                  </p>
+                </GlassCard>
               </motion.div>
             </div>
           </section>
@@ -193,17 +188,17 @@ export default function App() {
 
               <motion.div
                 {...scrollRevealProps}
-                className="relative z-10 flex flex-col items-center text-center gap-6"
+                className="relative z-10 flex flex-col items-start gap-6 max-w-xl"
               >
                 <h2 className="font-display text-3xl sm:text-4xl font-bold">
-                  Ready to explore your data?
+                  Your watch history is waiting
                 </h2>
-                <p className="text-muted-foreground max-w-lg">
-                  Sign in with Google and let MirrorYourself turn your watch
-                  history into actionable insights.
+                <p className="text-muted-foreground">
+                  Sign in with Google, upload your Takeout data, and
+                  MirrorYourself turns it into insights in under a minute.
                 </p>
                 <Button asChild variant="glow" size="lg">
-                  <Link to="/login">Get Started</Link>
+                  <Link to="/login">Sign in and start</Link>
                 </Button>
               </motion.div>
             </div>
