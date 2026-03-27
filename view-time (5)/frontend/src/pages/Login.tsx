@@ -42,12 +42,20 @@ export default function Login() {
 
         {/* Login card */}
         <GlassCard hover={false} className="w-full max-w-md relative z-10">
-          <h1 className="font-display text-3xl font-bold text-center mb-2">
-            Welcome back
-          </h1>
-          <p className="text-muted-foreground text-center mb-8">
-            Sign in to explore your viewing data
-          </p>
+          <div className="flex flex-col items-center mb-6">
+            <img
+              src="/logo.png"
+              alt=""
+              className="h-12 w-12 mb-4 opacity-80"
+            />
+            <h1 className="font-display text-3xl font-bold text-center mb-2">
+              Welcome back
+            </h1>
+            <p className="text-muted-foreground text-center text-sm max-w-xs">
+              Sign in to see your viewing patterns, content DNA, and session
+              insights.
+            </p>
+          </div>
 
           <SignInOrUpForm signInOptions={{ google: true }} />
 
