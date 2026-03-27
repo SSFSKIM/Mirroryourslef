@@ -94,8 +94,9 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, .font-display {
+  h1, h2, h3, .font-display {
     font-family: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    text-wrap: balance;
   }
 
   .font-mono,
