@@ -46,7 +46,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
     return (
       <div className={`grid grid-cols-1 gap-4 lg:grid-cols-4 ${className}`}>
         {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index} className="animate-pulse">
+          <Card key={index} className="glass-card animate-pulse">
             <CardHeader>
               <div className="h-4 w-24 rounded bg-muted" />
             </CardHeader>
@@ -81,7 +81,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
 
   return (
     <div className={`grid grid-cols-1 gap-4 lg:grid-cols-4 ${className}`}>
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Daily Average Viewing</CardTitle>
           <Timer className="h-4 w-4 text-muted-foreground" />
@@ -92,7 +92,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Weekly Watch Time</CardTitle>
           <Sparkles className="h-4 w-4 text-muted-foreground" />
@@ -105,7 +105,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Algorithmic Influence</CardTitle>
           <Flame className="h-4 w-4 text-muted-foreground" />
@@ -118,7 +118,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Session Rhythm</CardTitle>
           <SplitSquareHorizontal className="h-4 w-4 text-muted-foreground" />

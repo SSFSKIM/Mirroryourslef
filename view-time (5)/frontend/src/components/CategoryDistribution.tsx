@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recha
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useDataStore from "utils/dataStore";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface CategoryDistributionProps {
   className?: string;
@@ -29,28 +30,20 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   return null;
 };
 
-// Colors for different categories
-const COLORS = [
-  '#FF5252', // Primary red
-  '#D50000',
-  '#FF1744',
-  '#FF8A80',
-  '#B71C1C',
-  '#C62828',
-  '#D32F2F',
-  '#E53935',
-  '#F44336',
-  '#EF5350',
-  '#E57373',
-  '#EF9A9A',
-  '#FFCDD2',
-  '#FFEBEE',
-  '#C2185B', // Adding some complementary colors for better contrast
-  '#880E4F',
-  '#AD1457',
-  '#D81B60',
-  '#EC407A',
-  '#F06292',
+// Chart colors from design tokens — 12 distinct hues for category differentiation
+const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-6))",
+  "hsl(var(--chart-7))",
+  "hsl(var(--chart-8))",
+  "hsl(var(--chart-9))",
+  "hsl(var(--chart-10))",
+  "hsl(var(--chart-11))",
+  "hsl(var(--chart-12))",
 ];
 
 export function CategoryDistribution({ className = "" }: CategoryDistributionProps) {
@@ -156,7 +149,7 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
   };
   
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Category Distribution</CardTitle>
         <CardDescription>
@@ -165,11 +158,9 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-72">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-72" label="Loading category distribution" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : formattedData.length === 0 ? (
@@ -192,12 +183,12 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
                     label={renderCustomizedLabel}
                     outerRadius={80}
                     innerRadius={40}
-                    fill="#FF5252"
+                    fill="hsl(var(--chart-accent))"
                     dataKey="count"
                     nameKey="category"
                   >
                     {formattedData.map((entry, index) => (
-                      <Cell key={`cell-${entry.category}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${entry.category}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />

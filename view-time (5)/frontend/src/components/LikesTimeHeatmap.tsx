@@ -2,6 +2,8 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { chartTooltipStyle } from "./ChartTooltip";
 
 interface LikesTimeHeatmapProps {
   className?: string;
@@ -43,20 +45,18 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
   const maxDayCount = Math.max(...dayOfWeekData.map(d => d.count), 1);
   const maxHourCount = Math.max(...hourlyData.map(d => d.count), 1);
 
-  // Get color intensity based on count
+  // Get color intensity based on count using chart tokens
   const getColorIntensity = (count: number, maxCount: number) => {
     const intensity = count / maxCount;
-    if (intensity === 0) return "#E2E8F0";
-    if (intensity < 0.25) return "#FCA5A5";
-    if (intensity < 0.5) return "#F87171";
-    if (intensity < 0.75) return "#EF4444";
-    return "#DC2626";
+    if (intensity === 0) return "hsl(var(--chart-muted))";
+    const opacity = 0.3 + intensity * 0.7;
+    return `hsl(var(--chart-accent) / ${opacity.toFixed(2)})`;
   };
 
   const nUsed = (analytics as any)?.sample_size ?? (analytics as any)?.analytics?.sample_size ?? 0;
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Likes Activity Patterns</CardTitle>
         <CardDescription>
@@ -65,11 +65,9 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-96" label="Loading activity patterns" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="text-center text-destructive py-8">
             Error loading analytics data
           </div>
         ) : !contentTrends ? (
@@ -83,16 +81,10 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
               <h3 className="text-sm font-semibold mb-4">By Day of Week</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={dayOfWeekData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
                   <XAxis dataKey="day" />
                   <YAxis />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
-                  />
+                  <Tooltip contentStyle={chartTooltipStyle} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {dayOfWeekData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getColorIntensity(entry.count, maxDayCount)} />
@@ -107,7 +99,7 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
               <h3 className="text-sm font-semibold mb-4">By Hour of Day</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={hourlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
                   <XAxis
                     dataKey="hourLabel"
                     interval={2}
@@ -115,11 +107,7 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
                   />
                   <YAxis />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px'
-                    }}
+                    contentStyle={chartTooltipStyle}
                     labelFormatter={(value) => `Hour: ${value}`}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>

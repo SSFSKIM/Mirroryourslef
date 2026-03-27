@@ -109,10 +109,10 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
   const hasData = status && status.total_events && status.total_events > 0;
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+          <FileText aria-hidden="true" className="h-5 w-5" />
           Watch History Import
         </CardTitle>
         <CardDescription>
@@ -123,12 +123,12 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         {/* Status Display */}
         {isLoadingStatus ? (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading status...</span>
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+            <span>Loading status…</span>
           </div>
         ) : hasData ? (
           <Alert>
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
             <AlertDescription>
               <strong>{status.total_events?.toLocaleString()} events</strong> processed successfully
               {status.last_uploaded_at && (
@@ -143,7 +143,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         {/* Error Display */}
         {(error || fileValidationError) && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle aria-hidden="true" className="h-4 w-4" />
             <AlertDescription>{error || fileValidationError}</AlertDescription>
           </Alert>
         )}
@@ -151,73 +151,70 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         {/* Success Message */}
         {uploadMessage && !error && (
           <Alert>
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
             <AlertDescription>{uploadMessage}</AlertDescription>
           </Alert>
         )}
 
         {/* Upload Progress */}
         {isUploading && (
-          <div className="space-y-2">
+          <div className="space-y-2" aria-live="polite">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Processing your watch history...</span>
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-muted-foreground">Processing your watch history…</span>
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
             </div>
             <Progress value={undefined} className="h-2" />
             <p className="text-xs text-muted-foreground text-center">
-              ⏱️ This usually takes 2-5 minutes depending on file size
+              This usually takes 2-5 minutes depending on file size.
             </p>
           </div>
         )}
 
         {/* Drag & Drop Zone */}
         {!isUploading && (
-          <div
+          <button
+            type="button"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             className={`
-              relative border-2 border-dashed rounded-lg p-8 text-center transition-all
+              relative w-full border-2 border-dashed rounded-lg p-8 text-center transition-all
               ${isDragging
-                ? 'border-primary bg-primary/5 scale-[1.02]'
+                ? 'border-primary bg-primary/5 scale-[1.02] glow-primary-sm'
                 : 'border-muted hover:border-primary/50 hover:bg-accent/50'
               }
               ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
             `}
             onClick={handleFileSelect}
+            aria-describedby="watch-history-upload-help"
+            aria-busy={isUploading}
           >
             <div className="flex flex-col items-center gap-3">
               <div className={`p-4 rounded-full ${isDragging ? 'bg-primary/10' : 'bg-muted'}`}>
-                <Upload className={`h-8 w-8 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Upload aria-hidden="true" className={`h-8 w-8 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
               </div>
 
               <div className="space-y-1">
                 <p className="text-lg font-medium">
                   {isDragging ? 'Drop your file here' : 'Drop your Takeout file here'}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p id="watch-history-upload-help" className="text-sm text-muted-foreground">
                   or click to browse • Accepts .json or .zip files
                 </p>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleFileSelect();
-                }}
-              >
-                <Upload className="mr-2 h-4 w-4" />
+              <span className="mt-2 inline-flex h-9 items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
                 {hasData ? "Update Data" : "Choose File"}
-              </Button>
+              </span>
             </div>
-          </div>
+          </button>
         )}
 
         <input
           ref={fileInputRef}
+          id="watch-history-file-input"
+          name="watch-history-file"
           type="file"
           accept=".json,.zip"
           onChange={handleFileChange}
@@ -232,7 +229,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
             size="sm"
             className="w-full"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
             Delete All Watch History Data
           </Button>
         )}
@@ -240,7 +237,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         {/* Step-by-Step Guide */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Download className="h-4 w-4 text-primary" />
+            <Download aria-hidden="true" className="h-4 w-4 text-primary" />
             <h4 className="font-semibold text-sm">How to Get Your YouTube Takeout</h4>
           </div>
 
@@ -259,7 +256,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
                   className="text-primary hover:underline flex items-center gap-1"
                 >
                   takeout.google.com
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink aria-hidden="true" className="h-3 w-3" />
                 </a>
               </div>
             </div>
@@ -299,17 +296,17 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
           </div>
 
           {/* Time Estimate */}
-          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-900 dark:text-blue-100">
-              <strong>⏱️ Expected time:</strong> Google Takeout preparation takes 15-30 minutes.
+          <Alert className="border-primary/20 bg-primary/5">
+            <AlertCircle aria-hidden="true" className="h-4 w-4 text-primary" />
+            <AlertDescription>
+              <strong>Expected time:</strong> Google Takeout preparation takes 15-30 minutes.
               You'll receive an email when ready. File processing takes 2-5 minutes after upload.
             </AlertDescription>
           </Alert>
 
           {/* Privacy Note */}
           <p className="text-xs text-muted-foreground border-t pt-3">
-            <strong>🔒 Privacy:</strong> Your watch history is processed and stored securely in your private account.
+            <strong>Privacy:</strong> Your watch history is processed and stored securely in your private account.
             We never share your data with third parties. You can delete it anytime using the button above.
           </p>
         </div>

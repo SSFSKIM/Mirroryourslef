@@ -1,380 +1,425 @@
-# AGENTS.md - ViewTime (Y-Stats) YouTube Analytics App
+# AGENTS.md - MirrorYourself (ViewTime)
+
+## Current Reality
+
+- The active application lives under `view-time (5)/`.
+- The product is branded **MirrorYourself** in the UI, while some docs and filenames still say **ViewTime**.
+- This file is the source of truth for the implemented codebase.
+- `view-time (5)/docs/PRD_TRD.md` is partly aspirational and should not be treated as an exact description of what is already built.
+- `view-time (5)/README.md` still mentions `make`, but there is no `Makefile` in the repo.
 
 ## Mission Statement
-Build a YouTube usage analytics app that maximizes user growth and feature richness while maintaining privacy-first principles and delivering actionable insights to users about their viewing habits.
 
-## Primary Objectives
-- **Maximize user acquisition and retention** through engaging features and gamification
-- **Expand app functionality** based on user needs and analytics data
-- **Provide actionable insights** from YouTube usage patterns
-- **Ensure smooth data collection** with privacy compliance (GDPR/CCPA)
+Build a privacy-first YouTube analytics app that helps users understand their habits through:
 
-## Platform & Environment
+- YouTube liked-video sync via Google OAuth
+- YouTube watch-history import via Google Takeout upload
+- Visual analytics dashboards for viewing patterns
+- Actionable in-app guidance based on computed metrics
 
-### Development Platform
-- **Platform**: Databutton (React + TypeScript frontend, FastAPI backend)
-- **Dev Environment**: Hot-reload for UI and API in workspace preview
-- **Production**: Deploy from Databutton UI only when features are stable
-- **Database**: Firestore (direct access from UI preferred)
-- **Authentication**: Firebase Auth (use provided firebaseApp and firebaseAuth)
+## Implemented Product Surface
 
-### Setup Commands
+### What exists today
+
+1. **Authentication**
+   - Firebase Auth powers Google sign-in.
+   - Protected routes use `UserGuard` from `frontend/src/app/auth/UserGuard.tsx`.
+   - The app already exports shared Firebase objects from `app`, so do not initialize a second Firebase app.
+
+2. **Landing + Dashboard**
+   - Public landing page at `/`.
+   - Protected dashboard at `/dashboard`.
+   - Dashboard is split into two tabs:
+     - `Liked Videos`
+     - `Watch History`
+
+3. **Liked Videos Analytics**
+   - Frontend collects a Google OAuth access token with `youtube.readonly`.
+   - Backend fetches the user's likes playlist and individual video metadata from the YouTube Data API.
+   - Supported sample sizes are `50`, `100`, `150`, `200`, and `250`.
+   - Current dashboard components render:
+     - top keywords
+     - category distribution
+     - channel stats / loyalty
+     - shorts vs regular breakdown
+     - monthly trends
+     - liked-time heatmap
+
+4. **Watch History Analytics**
+   - Users upload a Google Takeout `.json` or `.zip` file.
+   - Backend parses watch events, sessionizes activity, computes summary metrics, and stores analytics.
+   - Current watch-history insights include:
+     - total events / unique videos / unique channels
+     - average session duration
+     - average videos per session
+     - recommendation-source breakdown
+     - repeat views
+     - heatmap and daily distribution
+     - shorts share and shorts minutes
+     - longest session
+     - algorithmic vs intentional viewing split
+
+5. **Smart Nudges**
+   - The current nudges are **rule-based frontend heuristics** derived from watch-history analytics.
+   - There is **no active OpenAI integration** in the implemented code path today.
+
+### What is not implemented as a real feature yet
+
+- No production OpenAI-backed coaching flow
+- No goal CRUD system
+- No achievement / streak / referral system
+- No community / social features
+- No full backend-managed notification system
+
+Some older comments, docs, and schema helpers still mention these ideas. Treat them as planned or legacy unless you verify active usage in code.
+
+## Repository Layout
+
+### Active app root
+
+```text
+view-time (5)/
+├── frontend/                 # Vite + React + TypeScript app
+├── backend/                  # FastAPI app
+├── docs/PRD_TRD.md           # Product/technical doc, partly aspirational
+├── docker-compose.dev.yml    # Hot-reload local Docker workflow
+├── docker-compose.yml        # Production-like container workflow
+├── Dockerfile                # Combined container image
+├── nginx.conf                # Frontend + backend proxying
+└── supervisord.conf          # Multi-process container startup
+```
+
+### Frontend structure
+
+```text
+view-time (5)/frontend/src/
+├── app/                      # Shared app/auth exports
+├── brain/                    # Generated API client
+├── components/               # Dashboard and reusable UI components
+├── pages/                    # Route components
+├── utils/                    # Zustand stores, Firebase, Firestore helpers
+├── extensions/shadcn/        # shadcn-style UI primitives
+├── router.tsx                # createBrowserRouter setup
+└── user-routes.tsx           # autogenerated route table
+```
+
+### Backend structure
+
+```text
+view-time (5)/backend/
+├── main.py                   # FastAPI bootstrap + router loading
+├── routers.json              # Router auth metadata
+├── app/apis/                 # Modular API routers
+│   ├── watch_history/
+│   ├── yt_sync/
+│   ├── youtube/              # legacy/simulated
+│   └── youtube_sync/         # legacy/token-based placeholder
+├── app/libs/                 # Storage + analytics processors
+├── app/auth/                 # AuthorizedUser alias
+└── databutton_app/mw/        # Firebase JWT auth middleware
+```
+
+## Frontend Conventions
+
+### Framework and routing
+
+- Frontend stack is **React 18 + TypeScript + Vite**.
+- Routing uses `createBrowserRouter` in `frontend/src/router.tsx`.
+- `frontend/src/user-routes.tsx` is autogenerated from pages. Do not hand-edit it unless the generation flow is intentionally being bypassed.
+
+### State management
+
+- `frontend/src/utils/auth.ts`
+  - `useAuthStore` for Firebase sign-in state
+- `frontend/src/utils/dataStore.ts`
+  - liked-videos sync status
+  - liked-videos analytics
+  - user profile / preferences
+- `frontend/src/utils/watchHistoryStore.ts`
+  - watch-history upload status
+  - watch-history analytics
+  - upload/delete actions
+
+Use these existing stores before introducing a new one.
+
+### API calls
+
+- Use the generated Brain client from `brain` for internal backend requests.
+- Existing active methods include:
+  - `brain.sync_liked_videos(...)`
+  - `brain.get_sync_status()`
+  - `brain.get_analytics(...)`
+  - `brain.get_user_summary()`
+  - `brain.get_watch_history_status()`
+  - `brain.get_watch_history_analytics()`
+  - `brain.upload_watch_history_takeout(...)`
+  - `brain.delete_watch_history()`
+- Direct `fetch` is acceptable for third-party APIs only. The current code already uses it for Google / YouTube API validation in `YouTubeSyncButton.tsx`.
+
+### Auth and Firebase
+
+- Reuse exports from `app`:
+  - `firebaseApp`
+  - `firebaseAuth`
+  - `firestore`
+  - `UserGuard`
+  - `useCurrentUser`
+- Do **not** initialize another Firebase app.
+- Frontend Firebase config is resolved from:
+  - injected `DATABUTTON_EXTENSIONS` config, or
+  - `VITE_FIREBASE_*` fallback env vars
+
+### Styling
+
+- Tailwind CSS is active.
+- shadcn-style primitives live under `frontend/src/extensions/shadcn/components`.
+- The app defaults to dark theme through `components/ThemeProvider.tsx`.
+
+### Important frontend caution
+
+The frontend is a hybrid of newer backend-driven analytics and older Firestore-first helpers. Before extending older utilities, verify whether they are still on the active path.
+
+Areas that need extra scrutiny before reuse:
+
+- `frontend/src/utils/watchHistory.ts`
+- `frontend/src/utils/database.ts`
+- `frontend/src/utils/firestore.ts`
+- parts of `frontend/src/utils/dataStore.ts`
+
+Prefer extending the current dashboard flow that already uses the backend routers and Brain client.
+
+## Backend Conventions
+
+### App bootstrap
+
+- The FastAPI app is created in `view-time (5)/backend/main.py`.
+- `main.py` dynamically imports routers from `app/apis/*/__init__.py`.
+- Router auth behavior is controlled by `backend/routers.json`.
+
+If you add a new API module:
+
+1. create `app/apis/<name>/__init__.py`
+2. expose `router = APIRouter(...)`
+3. update `backend/routers.json`
+
+If the router is missing from `routers.json`, bootstrap/auth wiring will not be correct.
+
+### Authentication
+
+- Backend auth is Firebase JWT validation via `databutton_app/mw/auth_mw.py`.
+- Existing routers all currently require auth.
+- Use `AuthorizedUser` from `app.auth` on authenticated endpoints.
+
+### Storage
+
+- Backend persistence goes through `app/libs/kv_store.py`.
+- `kv_store.py` prefers Google Firestore when available.
+- If Firestore is unavailable, it falls back to Databutton storage.
+- This means the app is **not** purely Firestore-collection-driven anymore; it is effectively a KV-backed storage layer with Firestore preference.
+
+### Logging and validation
+
+- Existing backend code uses `print(...)` for logging rather than `logging`.
+- Validate request/response shapes with Pydantic models where the router already follows that pattern.
+- Keep secrets and OAuth-sensitive logic in backend code only.
+
+### Active backend modules
+
+#### `yt_sync`
+
+This is the real liked-videos flow the dashboard uses today.
+
+- fetches likes playlist
+- fetches per-video metadata
+- stores liked-video payloads
+- generates liked-videos analytics
+- persists preferred sample size
+
+#### `watch_history`
+
+This is the real Google Takeout upload flow the dashboard uses today.
+
+- accepts `.json` and `.zip`
+- parses watch events
+- computes watch-history analytics
+- stores analytics and status
+- supports delete/reset
+
+### Legacy backend modules
+
+These modules still exist, but they are not the primary product path:
+
+- `app/apis/youtube`
+  - simulated watch-history sync
+- `app/apis/youtube_sync`
+  - token-based watch-history placeholder flow
+
+Do not build new product work on these modules unless you are intentionally reviving or replacing them.
+
+## Implemented Backend Endpoints
+
+### Active liked-videos endpoints
+
+- `POST /routes/yt-sync/sync-liked-videos`
+- `GET /routes/yt-sync/sync-status`
+- `GET /routes/yt-sync/analytics?sample_size=<n>`
+- `GET /routes/yt-sync/summary`
+
+### Active watch-history endpoints
+
+Note: `watch_history` currently has **no router prefix**, so its endpoints sit directly under `/routes`.
+
+- `GET /routes/status`
+- `GET /routes/analytics`
+- `POST /routes/upload-takeout`
+- `DELETE /routes/data`
+
+Be careful when adding new endpoints to `watch_history`; the missing prefix increases the risk of path collisions.
+
+### Legacy / secondary endpoints
+
+- `GET /routes/youtube/sync-status`
+- `POST /routes/youtube/sync-watch-history`
+- `GET /routes/youtube-sync/status`
+- `POST /routes/youtube-sync/watch-history`
+
+### Health endpoints
+
+- Backend app exposes `GET /health`
+- Nginx proxies `/health` to backend
+- The generated Brain client still contains `GET /_healthz`, which appears stale and should be verified before use
+
+## Storage Model
+
+### Backend KV keys in active use
+
+- `liked_videos_{user_id}`
+- `analytics_{user_id}_{sample_size}`
+- `sync_status_{user_id}`
+- `user_preferences_{user_id}`
+- `watch_history_events_{user_id}`
+- `watch_history_analytics_{user_id}`
+- `watch_history_status_{user_id}`
+
+### Frontend Firestore collections still referenced
+
+- `users`
+- `userPreferences`
+- `watchSessions`
+- `videoStats`
+
+These collections are still used by frontend helpers for profile/preferences and some older processing logic, but the main dashboard analytics now come from backend APIs and backend-managed storage.
+
+## Setup Commands
+
+### Frontend
+
 ```bash
-# Frontend (local optional)
-cd ui
-npm install
-npm run dev
-
-# Backend - DO NOT create FastAPI app or run uvicorn
-# Only add API files under src/app/apis/<api_name>/__init__.py
-
-# Python dependencies
-# Add to src/requirements.txt (platform installs automatically)
+cd "view-time (5)/frontend"
+./install.sh
+./run.sh
 ```
 
-## Architecture & Code Organization
+Equivalent manual commands:
 
-### Frontend Structure
-```
-ui/src/
-├── pages/          # Auto-routed pages (no BrowserRouter)
-├── components/     # Reusable UI components with Props interface
-├── stores/         # Zustand stores for state management
-├── utils/          # Helper functions and utilities
-├── hooks/          # Custom React hooks
-└── brain/          # Generated backend client
-```
-
-### Backend Structure
-```
-src/app/apis/
-├── <api_name>/
-│   └── __init__.py  # router = APIRouter()
-└── requirements.txt  # Python dependencies
-```
-
-## Core Features Implementation
-
-### Phase 1: MVP Features
-1. **YouTube Data Collection**
-   - OAuth scope: `https://www.googleapis.com/auth/youtube.readonly`
-   - Sync watch history: `youtube_sync_watch_history`
-   - Sync liked videos: `sync_liked_videos`
-   - Poll sync status: `get_sync_status`
-
-2. **Analytics Dashboard**
-   - Daily/weekly/monthly usage charts
-   - Most watched channels and categories
-   - Watch time heatmap
-   - Viewing session analysis, distribution buckets, and longest-session detection
-   - Algorithmic vs intentional viewing breakdown with recommendation sources
-   - Repeat viewing leaderboard derived from watch history uploads
-   - Video completion rates
-   - Liked videos analytics
-
-3. **User Authentication**
-   - Google Sign-in (Firebase Auth)
-   - Protected pages using `useUserGuardContext`
-   - Open pages using `useCurrentUser`
-
-### Phase 2: Growth Features
-1. **Gamification System**
-   - Usage goals and achievements
-   - Watching streaks tracking
-   - Comparison with anonymized averages
-   - Progress badges and rewards
-
-2. **AI-Powered Insights**
-   - OpenAI integration: `gpt-4o-mini` via `db.secrets.get("OPENAI_API_KEY")`
-   - Viewing pattern analysis
-   - Personalized recommendations
-   - Content quality scoring
-
-3. **Social & Sharing**
-   - Shareable statistics cards
-   - Friend comparisons (privacy-first)
-   - Community challenges
-   - Referral tracking system
-
-## Technical Requirements
-
-### Frontend Conventions
-```typescript
-// Component naming: PascalCase
-export const DashboardChart: React.FC<Props> = () => {}
-
-// State management: Zustand with onSnapshot
-const useYouTubeStore = create((set) => ({
-  watchHistory: [],
-  syncStatus: 'idle'
-}))
-
-// API calls: Always use brain client
-import brain from "brain"
-const response = await brain.youtube_sync_watch_history()
-
-// Styling: Tailwind + shadcn
-<Card className="dark:bg-gray-900 p-4 rounded-lg shadow-xl">
-  <CardContent>...</CardContent>
-</Card>
-
-// Toasts: Use sonner
-import { toast } from "sonner"
-toast.success("Sync completed!")
-```
-
-### Backend Conventions
-```python
-# API structure
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional
-
-router = APIRouter()
-
-class SyncRequest(BaseModel):
-    user_id: str
-    force_refresh: Optional[bool] = False
-
-@router.post("/sync")
-async def sync_watch_history(request: SyncRequest):
-    # Implementation
-    return {"status": "success"}
-
-# OpenAI usage
-from openai import OpenAI
-client = OpenAI(api_key=db.secrets.get("OPENAI_API_KEY"))
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[...]
-)
-
-# Storage (sanitize keys to [a-zA-Z0-9._-])
-import db
-data = db.storage.get(f"user_{user_id}_analytics")
-```
-
-### Database Schema
-```typescript
-// Firestore collections
-interface User {
-  uid: string
-  email: string
-  createdAt: Timestamp
-  preferences: {
-    theme: 'dark' | 'light'
-    notifications: boolean
-    privacy: 'public' | 'friends' | 'private'
-  }
-  subscription: 'free' | 'pro' | 'premium'
-}
-
-interface WatchSession {
-  userId: string
-  videoId: string
-  videoTitle: string
-  channelName: string
-  duration: number
-  watchedAt: Timestamp
-  category: string
-  completionRate: number
-}
-
-interface Analytics {
-  userId: string
-  period: 'daily' | 'weekly' | 'monthly'
-  totalWatchTime: number
-  videoCount: number
-  topChannels: Array<{name: string, time: number}>
-  peakHours: Record<number, number>
-  updatedAt: Timestamp
-}
-```
-
-## Security & Privacy
-
-### Critical Security Rules
-- **NEVER expose secrets in frontend** - Use backend only for sensitive operations
-- **OAuth tokens**: Store securely, never pass to frontend
-- **API keys**: Access via `db.secrets` in backend only
-- **User data**: Encrypt sensitive information, implement data deletion
-- **Rate limiting**: Implement on all public endpoints
-- **Input validation**: Use Pydantic models, sanitize all inputs
-
-### Privacy Compliance
-- GDPR/CCPA data export functionality
-- Clear data deletion policy and implementation
-- Consent management for data collection
-- Anonymous analytics option for privacy-conscious users
-
-## User Growth Implementation
-
-### Onboarding Flow
-1. **Welcome Screen** - Value proposition clear in 10 seconds
-2. **Quick Setup** - OAuth in 2 clicks
-3. **First Insight** - Show immediate value (today's watch time)
-4. **Tutorial** - Interactive guide to key features
-5. **Goal Setting** - Personal targets for engagement
-
-### Engagement Mechanics
-```typescript
-// Streak tracking
-const checkStreak = async (userId: string) => {
-  const lastActive = await getLastActiveDate(userId)
-  const streak = calculateStreak(lastActive)
-  if (streak > 0 && streak % 7 === 0) {
-    await unlockAchievement(userId, `week_${streak/7}_streak`)
-    toast.success(`🔥 ${streak} day streak!`)
-  }
-}
-
-// Gamification points
-const awardPoints = (action: string, userId: string) => {
-  const points = {
-    'daily_check': 10,
-    'weekly_report_viewed': 25,
-    'goal_achieved': 50,
-    'friend_referred': 100
-  }
-  updateUserPoints(userId, points[action])
-}
-```
-
-## Performance Optimization
-
-### Frontend Performance
-- Lazy load components: `React.lazy(() => import('./HeavyChart'))`
-- Memoize expensive calculations: `useMemo(() => calculateStats(data), [data])`
-- Virtual scrolling for long lists: `react-window`
-- Optimize images: Next/Image or lazy loading
-- Bundle splitting by route
-
-### Backend Performance
-- Cache frequently accessed data in `db.storage`
-- Batch Firestore operations
-- Implement pagination for large datasets
-- Use indexes for frequent queries
-- Background jobs for heavy processing
-
-## Testing & Quality Assurance
-
-### Manual Testing Checklist
-- [ ] **Auth Flow**: Google sign-in → Protected redirect → Logout
-- [ ] **YouTube Sync**: Trigger sync → Poll status → Verify data
-- [ ] **Analytics**: Charts render → Data updates → Responsive layout
-- [ ] **Dark Theme**: All components properly styled
-- [ ] **Accessibility**: Keyboard navigation, screen reader support
-- [ ] **Mobile**: Responsive on all breakpoints
-
-### Common Pitfalls to Avoid
-- ❌ DO NOT initialize another Firebase app
-- ❌ DO NOT use path params in router (use query params)
-- ❌ DO NOT import logging module (use print)
-- ❌ DO NOT use fetch for internal APIs (use brain client)
-- ❌ DO NOT expose secrets in frontend
-- ❌ DO NOT modify auto-generated router
-
-## Available Backend Endpoints
-```python
-# Health & Status
-check_health()
-get_sync_status()
-get_analytics_status()
-
-# YouTube Sync
-youtube_sync_watch_history()
-sync_liked_videos()
-get_sync_status_endpoint()
-sync_watch_history_endpoint()
-
-# Analytics
-get_analytics()
-get_user_summary()
-
-# Always verify parameter names in ui/src/brain
-```
-
-## Deployment Checklist
-
-### Pre-deployment
-- [ ] All manual tests passing
-- [ ] No console errors
-- [ ] Secrets configured in db.secrets
-- [ ] API endpoints documented
-- [ ] Rate limiting enabled
-- [ ] Error tracking configured
-
-### Post-deployment
-- [ ] Monitor error logs
-- [ ] Check performance metrics
-- [ ] Verify analytics tracking
-- [ ] Test critical user flows
-- [ ] Monitor user feedback
-
-## Definition of Done
-
-### Per Feature
-✅ **UI**: Accessible, responsive, dark-theme compatible, no console errors  
-✅ **API**: Pydantic models, validated inputs, callable via brain client  
-✅ **Data**: Firestore integrated, real-time updates via onSnapshot  
-✅ **Security**: No exposed secrets, input sanitization, rate limiting  
-✅ **UX**: Loading states, error handling, success feedback via toasts  
-✅ **Growth**: Analytics events tracked, engagement mechanics implemented  
-✅ **Docs**: AGENTS.md updated, inline comments for complex logic
-
-## Monitoring & Analytics
-
-### Track Key Metrics
-- User acquisition rate
-- Daily/Weekly/Monthly Active Users
-- Feature adoption rates
-- User retention (D1, D7, D30)
-- Sync completion rates
-- Error rates by feature
-
-### Implementation
-```typescript
-// Track events
-const trackEvent = (event: string, properties?: any) => {
-  // Google Analytics or Mixpanel
-  gtag('event', event, properties)
-  
-  // Internal analytics
-  logUserAction(event, properties)
-}
-
-// Usage
-trackEvent('sync_completed', { duration: syncTime })
-trackEvent('feature_used', { feature: 'weekly_report' })
-```
-
-## Commit Conventions
 ```bash
-feat: Add weekly report generation
-fix: Resolve sync status polling issue
-chore: Update dependencies
-refactor: Optimize analytics calculation
-docs: Update AGENTS.md with new endpoints
-style: Improve dark mode contrast
-perf: Lazy load heavy components
-test: Add sync flow validation
+cd "view-time (5)/frontend"
+corepack enable
+yarn set version stable
+yarn install
+yarn dev --host 0.0.0.0 --port 5173
 ```
 
-## Resources & Documentation
-- Databutton Docs: Platform-specific guidance
-- YouTube API: https://developers.google.com/youtube/v3
-- Firebase Auth: https://firebase.google.com/docs/auth
-- Firestore: https://firebase.google.com/docs/firestore
-- Tailwind CSS: https://tailwindcss.com/docs
-- shadcn/ui: https://ui.shadcn.com/docs
-- PRD & TRD: `view-time (5)/docs/PRD_TRD.md`
+### Backend
 
-## Important Notes for AI Agents
-1. **Always prioritize user value** - Every feature should solve a real problem
-2. **Privacy-first approach** - User trust is paramount
-3. **Performance matters** - Slow apps lose users
-4. **Mobile-first design** - Most users will access via mobile
-5. **Iterate based on data** - Use analytics to guide development
-6. **Accessibility is non-negotiable** - WCAG 2.1 AA compliance
-7. **Code quality affects growth** - Technical debt slows feature development
-8. **Documentation saves time** - Clear code and comments reduce debugging
+```bash
+cd "view-time (5)/backend"
+./install.sh
+./run.sh
+```
+
+Equivalent manual commands:
+
+```bash
+cd "view-time (5)/backend"
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Docker workflows
+
+Hot-reload dev stack:
+
+```bash
+cd "view-time (5)"
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Production-like local container:
+
+```bash
+cd "view-time (5)"
+docker compose up --build
+```
+
+### Local ports
+
+- Frontend Vite dev server: `5173`
+- Backend FastAPI server: `8000`
+- Combined Nginx container: `80` outside container, `/health` proxied to backend
+
+## Security And Privacy Rules
+
+- Never expose secrets in frontend code.
+- Never persist raw OAuth tokens beyond the minimum needed flow.
+- Keep YouTube API access in authenticated flows only.
+- Use backend code for anything sensitive.
+- Keep user-scoped data keyed by authenticated Firebase user ID.
+- Preserve the current delete/reset behavior for watch-history data.
+
+## Testing And Verification
+
+### Current state
+
+- There are **no app-owned automated test files** in the repo today.
+- Verification is currently mostly lint + manual flow testing.
+
+### Frontend verification
+
+```bash
+cd "view-time (5)/frontend"
+yarn lint
+```
+
+### Recommended manual QA
+
+1. Sign in with Google and confirm `/dashboard` access.
+2. Run liked-videos sync and confirm dashboard cards populate.
+3. Upload a Takeout `.json` or `.zip` file and confirm watch-history analytics appear.
+4. Delete watch-history data and confirm status resets.
+5. Check responsive layout and dark theme on the main dashboard screens.
+
+If you change backend routes, also verify the generated Brain client still matches the backend paths.
+
+## Known Drift And Pitfalls
+
+- `view-time (5)/docs/PRD_TRD.md` contains planned architecture and features that are not fully implemented.
+- `view-time (5)/README.md` references `make`, but there is no `Makefile`.
+- `frontend/package.json` contains many template/export dependencies that are not central to the current app.
+- `frontend/src/brain/*` includes stale legacy endpoints as well as the active ones.
+- `frontend/vite.config.ts` still injects some Databutton-oriented defaults such as `__APP_TITLE__ = "Databutton"`.
+- Some comments still describe Databutton-only behavior even though the repo also supports local Docker and Cloud Run deployment.
+
+## Definition Of Done For Future Changes
+
+Per change, aim for all of the following:
+
+- UI works on desktop and mobile for the touched flow
+- No new console errors in the touched flow
+- Backend route shape matches the Brain client usage
+- Auth requirements are preserved
+- Sensitive logic stays backend-side
+- Relevant manual flow has been exercised
+- AGENTS.md stays aligned with the implemented code, not just the roadmap

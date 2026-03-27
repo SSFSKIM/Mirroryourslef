@@ -2,6 +2,7 @@ import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 // Custom tooltip component for video length distribution
 interface CustomTooltipProps {
@@ -77,7 +78,7 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
   }, [formattedData]);
   
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Video Length Distribution</CardTitle>
         <CardDescription>
@@ -86,11 +87,9 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-72">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-72" label="Loading video length distribution" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : !formattedData || formattedData.length === 0 ? (
@@ -109,7 +108,7 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
                   bottom: 5,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" className="opacity-30" />
                 <XAxis 
                   dataKey="label" 
                   className="text-xs"
@@ -123,7 +122,7 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
                 <Tooltip content={<CustomTooltip />} />
                 <Bar 
                   dataKey="count" 
-                  fill="#FF5252" 
+                  fill="hsl(var(--chart-accent))"
                   radius={[2, 2, 0, 0]}
                   name="Video Count"
                 />

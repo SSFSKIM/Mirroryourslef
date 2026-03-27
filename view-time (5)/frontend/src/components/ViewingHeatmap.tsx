@@ -8,10 +8,10 @@ const HOURS = Array.from({ length: 24 }, (_, index) => index);
 
 const heatColor = (value: number, max: number): string => {
   if (max === 0) {
-    return "rgba(220, 38, 38, 0.05)";
+    return "hsl(var(--chart-muted))";
   }
-  const intensity = 0.15 + (value / max) * 0.75;
-  return `rgba(220, 38, 38, ${intensity.toFixed(2)})`;
+  const opacity = 0.15 + (value / max) * 0.75;
+  return `hsl(var(--chart-accent) / ${opacity.toFixed(2)})`;
 };
 
 interface ViewingHeatmapProps {
@@ -50,47 +50,90 @@ export const ViewingHeatmap: React.FC<ViewingHeatmapProps> = ({ className = "" }
   const hasHeatmap = analytics.heatmap && Object.keys(analytics.heatmap).length > 0;
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Viewing Heatmap</CardTitle>
         <CardDescription>When you watch the most. Darker cells indicate heavier viewing.</CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent>
         {!hasHeatmap ? (
           <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
             We need a bit more history to surface time-of-day insights.
           </div>
         ) : (
-          <div className="min-w-[768px]">
-            <div className="grid grid-cols-[80px_repeat(24,1fr)] gap-1 text-xs">
-              <div />
-              {HOURS.map((hour) => (
-                <div key={hour} className="text-center text-muted-foreground">
-                  {hour}
-                </div>
-              ))}
-              {DAY_LABELS.map((label, index) => (
-                <React.Fragment key={label}>
-                  <div className="flex items-center justify-start pr-2 font-medium">{label}</div>
-                  {HOURS.map((hour) => {
-                    const key = `${index}-${hour}`;
-                    const count = cells.get(key) ?? 0;
-                    const background = heatColor(count, maxValue);
-                    return (
-                      <div
-                        key={key}
-                        className="flex h-6 items-center justify-center rounded"
-                        style={{ backgroundColor: background }}
-                        title={`${label} @ ${hour}:00 · ${count} views`}
-                      >
-                        {count > 0 ? count : ""}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
+          <>
+            {/* Full grid on large screens */}
+            <div className="hidden md:block overflow-x-auto" role="img" aria-label="Viewing heatmap showing watch frequency by day and hour">
+              <div className="grid grid-cols-[60px_repeat(24,1fr)] gap-1 text-xs">
+                <div />
+                {HOURS.map((hour) => (
+                  <div key={hour} className="text-center text-muted-foreground">
+                    {hour}
+                  </div>
+                ))}
+                {DAY_LABELS.map((label, index) => (
+                  <React.Fragment key={label}>
+                    <div className="flex items-center justify-start pr-2 font-medium">{label}</div>
+                    {HOURS.map((hour) => {
+                      const key = `${index}-${hour}`;
+                      const count = cells.get(key) ?? 0;
+                      const background = heatColor(count, maxValue);
+                      return (
+                        <div
+                          key={key}
+                          className="flex h-6 items-center justify-center rounded text-[10px]"
+                          style={{ backgroundColor: background }}
+                          title={`${label} @ ${hour}:00 · ${count} views`}
+                        >
+                          {count > 0 ? count : ""}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Compact view on mobile: aggregate into time blocks */}
+            <div className="md:hidden" role="img" aria-label="Viewing heatmap showing watch frequency by day and time period">
+              <div className="grid grid-cols-[48px_repeat(4,1fr)] gap-1.5 text-xs">
+                <div />
+                {(["Morning", "Afternoon", "Evening", "Night"] as const).map((period) => (
+                  <div key={period} className="text-center text-muted-foreground font-medium">{period}</div>
+                ))}
+                {DAY_LABELS.map((label, dayIndex) => {
+                  const blocks = [
+                    { label: "Morning", range: [6, 12] },
+                    { label: "Afternoon", range: [12, 18] },
+                    { label: "Evening", range: [18, 24] },
+                    { label: "Night", range: [0, 6] },
+                  ];
+                  return (
+                    <React.Fragment key={label}>
+                      <div className="flex items-center font-medium">{label}</div>
+                      {blocks.map((block) => {
+                        let total = 0;
+                        for (let h = block.range[0]; h < block.range[1]; h++) {
+                          total += cells.get(`${dayIndex}-${h}`) ?? 0;
+                        }
+                        const background = heatColor(total, maxValue);
+                        return (
+                          <div
+                            key={block.label}
+                            className="flex h-8 items-center justify-center rounded text-xs"
+                            style={{ backgroundColor: background }}
+                            title={`${label} ${block.label}: ${total} views`}
+                          >
+                            {total > 0 ? total : ""}
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

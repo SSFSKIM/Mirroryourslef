@@ -4,7 +4,15 @@ import { AlertCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
-const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#3b82f6", "#8b5cf6"];
+const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--chart-6))",
+  "hsl(var(--chart-7))",
+];
 
 export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ className = "" }) => {
   const { analytics, isLoadingAnalytics } = useWatchHistoryStore();
@@ -30,7 +38,7 @@ export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ clas
 
   if (isLoadingAnalytics) {
     return (
-      <Card className={`${className} animate-pulse`}>
+      <Card className={`glass-card ${className} animate-pulse`}>
         <CardHeader>
           <CardTitle>Recommendation Sources</CardTitle>
         </CardHeader>
@@ -43,7 +51,7 @@ export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ clas
 
   if (!analytics || !data.length) {
     return (
-      <Card className={className}>
+      <Card className={`glass-card ${className}`}>
         <CardHeader className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-muted-foreground" />
           <div>
@@ -79,7 +87,7 @@ export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ clas
             }} />
             <Bar dataKey="percentage" radius={[0, 4, 4, 0]}> 
               {data.map((entry, index) => (
-                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>

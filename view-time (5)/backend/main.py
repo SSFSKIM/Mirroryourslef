@@ -3,6 +3,7 @@ import pathlib
 import json
 import dotenv
 from fastapi import FastAPI, APIRouter, Depends
+from fastapi.middleware.cors import CORSMiddleware
 
 dotenv.load_dotenv()
 
@@ -74,9 +75,36 @@ def get_firebase_config() -> dict | None:
     return None
 
 
+def get_allowed_origins() -> list[str]:
+    configured_origins = os.environ.get("FRONTEND_ORIGINS", "")
+    local_origins = [
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+
+    extra_origins = [
+        origin.strip()
+        for origin in configured_origins.split(",")
+        if origin.strip()
+    ]
+
+    return list(dict.fromkeys(local_origins + extra_origins))
+
+
 def create_app() -> FastAPI:
     """Create the app. This is called by uvicorn with the factory option to construct the app object."""
     app = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=get_allowed_origins(),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(import_api_routers())
 
     @app.get("/health", include_in_schema=False)

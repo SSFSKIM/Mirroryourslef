@@ -1,7 +1,9 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { chartTooltipStyle } from "./ChartTooltip";
 
 interface MonthlyTrendsChartProps {
   className?: string;
@@ -52,7 +54,7 @@ export function MonthlyTrendsChart({ className = "" }: MonthlyTrendsChartProps) 
   const avgLikesPerMonth = monthlyData.length > 0 ? Math.round(totalLikes / monthlyData.length) : 0;
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Likes Over Time</CardTitle>
         <CardDescription>
@@ -61,11 +63,9 @@ export function MonthlyTrendsChart({ className = "" }: MonthlyTrendsChartProps) 
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-72">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-72" label="Loading monthly trends" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : !contentTrends || monthlyData.length === 0 ? (
@@ -91,11 +91,11 @@ export function MonthlyTrendsChart({ className = "" }: MonthlyTrendsChartProps) 
               <AreaChart data={monthlyData}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(var(--chart-accent))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-accent))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
                 <XAxis
                   dataKey="monthLabel"
                   tick={{ fontSize: 12 }}
@@ -105,18 +105,14 @@ export function MonthlyTrendsChart({ className = "" }: MonthlyTrendsChartProps) 
                 />
                 <YAxis />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
+                  contentStyle={chartTooltipStyle}
                   labelFormatter={(value) => `Month: ${value}`}
                   formatter={(value: number) => [value, 'Likes']}
                 />
                 <Area
                   type="monotone"
                   dataKey="count"
-                  stroke="#EF4444"
+                  stroke="hsl(var(--chart-accent))"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorCount)"

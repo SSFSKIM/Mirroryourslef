@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuthStore } from 'utils/auth';
 import useDataStore from 'utils/dataStore';
 import { Loader2, Youtube, CheckCircle, AlertCircle, BarChart3 } from 'lucide-react';
@@ -8,7 +9,6 @@ import { firebaseAuth } from 'app';
 import { 
   GoogleAuthProvider, 
   signInWithPopup,
-  getAdditionalUserInfo 
 } from 'firebase/auth';
 import brain from 'brain';
 
@@ -164,7 +164,7 @@ export default function YouTubeSyncButton() {
       setSyncStatus({});
 
       // First, check if we have a stored and potentially valid access token
-      let accessToken = sessionStorage.getItem('youtube_access_token');
+      const accessToken = sessionStorage.getItem('youtube_access_token');
       
       // If no stored token or if we want to ensure fresh token, authenticate
       if (!accessToken) {
@@ -264,111 +264,125 @@ export default function YouTubeSyncButton() {
   const formatLastSync = (dateString?: string) => {
     if (!dateString) return 'Never';
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between p-4 border rounded-lg">
-        <div className="flex items-center space-x-3">
-          <Youtube className="h-6 w-6 text-red-500" />
-          <div>
-            <h3 className="font-semibold">YouTube Liked Videos Analytics</h3>
-            <p className="text-sm text-gray-500">
+    <section className="space-y-4" aria-labelledby="liked-videos-sync-title">
+      <div className="glass-card rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="mt-0.5 rounded-md bg-red-500/10 p-2">
+              <Youtube aria-hidden="true" className="h-5 w-5 text-red-500" />
+            </div>
+            <div className="min-w-0">
+              <h3 id="liked-videos-sync-title" className="font-semibold">
+                YouTube Liked Videos Analytics
+              </h3>
+              <p className="text-sm text-muted-foreground">
               {syncStatus.lastSync 
                 ? `Last synced: ${formatLastSync(syncStatus.lastSync)}`
                 : 'Not synced yet'}
-            </p>
-            {syncStatus.itemsProcessed && (
-              <div className="space-y-1">
-                <p className="text-sm text-green-600">
-                  ✓ {syncStatus.itemsProcessed} liked videos synced
-                </p>
-                {syncStatus.analyticsGenerated && (
-                  <p className="text-sm text-blue-600 flex items-center">
-                    <BarChart3 className="h-3 w-3 mr-1" />
-                    Analytics generated
+              </p>
+              {syncStatus.itemsProcessed ? (
+                <div className="mt-2 space-y-1">
+                  <p className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle aria-hidden="true" className="h-3.5 w-3.5" />
+                    {syncStatus.itemsProcessed} liked videos synced
                   </p>
-                )}
+                  {syncStatus.analyticsGenerated && (
+                    <p className="flex items-center gap-1 text-sm text-sky-600 dark:text-sky-400">
+                      <BarChart3 aria-hidden="true" className="h-3.5 w-3.5" />
+                      Analytics generated
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end lg:w-auto">
+            {!needsAuth && (
+              <div className="flex w-full flex-col gap-2 sm:w-auto">
+                <label htmlFor="liked-video-sample-size" className="text-xs font-medium text-muted-foreground">
+                  Sample Size
+                </label>
+                <Select
+                  value={selectedSampleSize.toString()}
+                  onValueChange={(value) => {
+                    setHasManualSelection(true);
+                    setSelectedSampleSize(parseInt(value));
+                  }}
+                  disabled={isSyncing}
+                >
+                  <SelectTrigger id="liked-video-sample-size" className="w-full sm:w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SAMPLE_SIZE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
+
+            <Button
+              onClick={handleSyncClick}
+              disabled={isSyncing}
+              variant={needsAuth ? "outline" : "default"}
+              className="w-full sm:w-auto"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
+                  {needsAuth ? 'Authenticating…' : 'Syncing…'}
+                </>
+              ) : needsAuth ? (
+                <>
+                  <Youtube aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Connect YouTube
+                </>
+              ) : (
+                <>
+                  <CheckCircle aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Sync Liked Videos
+                </>
+              )}
+            </Button>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          {!needsAuth && (
-            <div className="flex flex-col space-y-2">
-              <label className="text-xs text-gray-500">Sample Size</label>
-              <Select
-                value={selectedSampleSize.toString()}
-                onValueChange={(value) => {
-                  setHasManualSelection(true);
-                  setSelectedSampleSize(parseInt(value));
-                }}
-                disabled={isSyncing}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SAMPLE_SIZE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          <Button
-            onClick={handleSyncClick}
-            disabled={isSyncing}
-            variant={needsAuth ? "outline" : "default"}
-          >
-            {isSyncing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {needsAuth ? 'Authenticating...' : 'Syncing...'}
-              </>
-            ) : needsAuth ? (
-              <>
-                <Youtube className="mr-2 h-4 w-4" />
-                Connect YouTube
-              </>
-            ) : (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Sync Liked Videos
-              </>
-            )}
-          </Button>
         </div>
       </div>
 
       {syncStatus.error && (
-        <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-red-500" />
-          <p className="text-sm text-red-700">{syncStatus.error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle aria-hidden="true" className="h-4 w-4" />
+          <AlertDescription>{syncStatus.error}</AlertDescription>
+        </Alert>
       )}
 
       {needsAuth && !isSyncing && (
-        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            📌 Connect your YouTube account to analyze your liked videos.
-            Click "Connect YouTube" to get started.
-          </p>
-        </div>
+        <Alert>
+          <Youtube aria-hidden="true" className="h-4 w-4" />
+          <AlertDescription>
+            Connect your YouTube account to analyze your liked videos. Select an account and grant YouTube access to get started.
+          </AlertDescription>
+        </Alert>
       )}
       
       {!needsAuth && !syncStatus.lastSync && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            📊 Choose your sample size and sync your liked videos to generate analytics insights including categories, keywords, and viewing patterns.
-          </p>
-        </div>
+        <Alert>
+          <BarChart3 aria-hidden="true" className="h-4 w-4" />
+          <AlertDescription>
+            Choose your sample size and sync your liked videos to generate analytics for categories, keywords, channels, and viewing patterns.
+          </AlertDescription>
+        </Alert>
       )}
-    </div>
+    </section>
   );
 }

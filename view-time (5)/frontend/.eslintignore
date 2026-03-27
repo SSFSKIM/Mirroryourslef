@@ -1,0 +1,6 @@
+.yarn
+.pnp.*
+dist
+node_modules
+src/brain/**
+src/extensions/shadcn/**

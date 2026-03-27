@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface ShortsCircularProgressProps {
   className?: string;
@@ -35,18 +36,20 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
   // Calculate the circle gradient angle based on percentage
   const getCircleStyle = (percentage: number) => {
     const angle = (percentage / 100) * 360;
+    const accent = "hsl(var(--chart-accent))";
+    const muted = "hsl(var(--chart-muted))";
 
     if (percentage >= 100) {
-      return { backgroundImage: `conic-gradient(#FF5252 0deg, #FF5252 360deg)` };
+      return { backgroundImage: `conic-gradient(${accent} 0deg, ${accent} 360deg)` };
     }
 
     return {
-      backgroundImage: `conic-gradient(#FF5252 0deg, #FF5252 ${angle}deg, #E2E8F0 ${angle}deg, #E2E8F0 360deg)`
+      backgroundImage: `conic-gradient(${accent} 0deg, ${accent} ${angle}deg, ${muted} ${angle}deg, ${muted} 360deg)`
     };
   };
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Shorts vs Regular Videos</CardTitle>
         <CardDescription>
@@ -55,11 +58,9 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
       </CardHeader>
       <CardContent className="flex justify-center">
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-48" label="Loading shorts breakdown" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : !analytics ? (
@@ -69,10 +70,10 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
         ) : (
           <div className="flex flex-col items-center justify-center py-6">
             <div
-              className="relative flex items-center justify-center w-48 h-48 rounded-full"
+              className="relative flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 rounded-full"
               style={getCircleStyle(shortsPercentage)}
             >
-              <div className="absolute w-40 h-40 bg-card rounded-full flex items-center justify-center">
+              <div className="absolute w-28 h-28 sm:w-40 sm:h-40 bg-card rounded-full flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-4xl font-bold">
                     {Math.round(shortsPercentage)}%
@@ -85,11 +86,11 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
             </div>
             <div className="mt-4 flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded"></div>
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-accent))" }}></div>
                 <span>Shorts ({Math.round(shortsPercentage)}%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                <div className="h-3 w-3 rounded bg-muted-foreground/30"></div>
                 <span>Regular ({Math.round(regularPercentage)}%)</span>
               </div>
             </div>

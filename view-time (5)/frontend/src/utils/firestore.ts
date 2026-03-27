@@ -481,7 +481,7 @@ export async function getShortsStatistics(userId: string): Promise<{
     let shortsWatchTime = 0;
     let totalShortsCount = 0;
     let totalShortsSessions = 0;
-    let uniqueDays = new Set();
+    const uniqueDays = new Set();
     
     // Process video stats
     videoSnapshot.forEach((doc) => {

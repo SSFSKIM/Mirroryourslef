@@ -83,7 +83,7 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
   }, [analytics]);
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Smart Nudges</CardTitle>
@@ -104,9 +104,9 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
             >
               <div className="flex items-start space-x-2">
                 {nudge.type === "celebration" ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
                 ) : (
-                  <Badge variant="secondary">Nudge</Badge>
+                  <Badge variant="secondary" className="text-accent">Nudge</Badge>
                 )}
                 <p className="leading-relaxed text-muted-foreground">{nudge.message}</p>
               </div>

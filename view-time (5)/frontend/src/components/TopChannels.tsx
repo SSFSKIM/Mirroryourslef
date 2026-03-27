@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface TopChannelsProps {
   className?: string;
@@ -49,13 +50,13 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
     if (typeof topLevelN === "number") return topLevelN;
     // Fallback: sum of counts across all channels
     const total = Array.isArray(topChannels)
-      ? topChannels.reduce((sum: number, ch: any) => sum + (ch?.videoCount || 0), 0)
+      ? topChannels.reduce((sum: number, ch: any) => sum + (ch?.video_count || ch?.videoCount || 0), 0)
       : 0;
     return total;
   }, [analytics, topChannels]);
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Top {limit} Channels</CardTitle>
         <CardDescription>
@@ -64,11 +65,9 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-72">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-72" label="Loading top channels" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="py-8 text-center text-destructive">
             Error loading analytics data.
           </div>
         ) : !topChannels || topChannels.length === 0 ? (
@@ -91,7 +90,7 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
 
               return (
                 <div key={channelName + index} className="flex items-center space-x-4">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-800 text-sm font-semibold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                     {index + 1}
                   </div>
                   <Avatar className="h-10 w-10">
@@ -99,10 +98,10 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
                     <AvatarFallback>{channelName.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {channelName}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     {videoCount} liked videos
                   </p>
                 </div>
@@ -111,7 +110,7 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
                     value={(videoCount / maxVideoCount) * 100}
                     className="w-20 h-2"
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[2rem] text-right">
+                  <span className="min-w-[2rem] text-right text-xs text-muted-foreground">
                     {videoCount}
                   </span>
                 </div>

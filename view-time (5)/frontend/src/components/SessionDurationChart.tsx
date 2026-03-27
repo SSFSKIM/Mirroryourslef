@@ -23,7 +23,7 @@ export const SessionDurationChart: React.FC<{ className?: string }> = ({ classNa
 
   if (isLoadingAnalytics) {
     return (
-      <Card className={`${className} animate-pulse`}>
+      <Card className={`glass-card ${className} animate-pulse`}>
         <CardHeader>
           <CardTitle>Session Duration</CardTitle>
         </CardHeader>
@@ -36,7 +36,7 @@ export const SessionDurationChart: React.FC<{ className?: string }> = ({ classNa
 
   if (!analytics || !data.length) {
     return (
-      <Card className={className}>
+      <Card className={`glass-card ${className}`}>
         <CardHeader className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-muted-foreground" />
           <div>

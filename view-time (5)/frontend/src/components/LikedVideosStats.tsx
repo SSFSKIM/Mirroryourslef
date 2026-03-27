@@ -76,14 +76,14 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
     return (
       <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="glass-card animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-24"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-4 w-24 rounded bg-muted"></div>
+              <div className="h-4 w-4 rounded bg-muted"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded w-20"></div>
+              <div className="mb-1 h-8 w-16 rounded bg-muted"></div>
+              <div className="h-3 w-20 rounded bg-muted"></div>
             </CardContent>
           </Card>
         ))}
@@ -93,7 +93,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
 
   if (analyticsError) {
     return (
-      <div className={`p-4 text-center text-gray-500 ${className}`}>
+      <div className={`p-4 text-center text-muted-foreground ${className}`}>
         <p>{analyticsError.message || 'Failed to load analytics data.'}</p>
       </div>
     );
@@ -101,7 +101,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
 
   if (!analyticsPayload) {
     return (
-      <div className={`p-4 text-center text-gray-500 ${className}`}>
+      <div className={`p-4 text-center text-muted-foreground ${className}`}>
         <p>No analytics data available. Please sync your liked videos first.</p>
       </div>
     );
@@ -126,7 +126,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
   return (
     <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
       {/* Average Video Length */}
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Average Video Length</CardTitle>
           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -140,7 +140,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
       </Card>
 
       {/* Number of Unique Channels */}
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Unique Channels</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -154,7 +154,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
       </Card>
 
       {/* Shorts vs Long-form Ratio */}
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Shorts vs Long-form</CardTitle>
           <Video className="h-4 w-4 text-muted-foreground" />

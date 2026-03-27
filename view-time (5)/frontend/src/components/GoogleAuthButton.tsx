@@ -25,11 +25,11 @@ export function GoogleAuthButton({ variant = 'accent', size = 'lg', className = 
       size={size}
       onClick={handleAuth}
       disabled={isLoading}
-      className={className}
+      className={`hover:glow-accent-sm ${className}`}
     >
       {isLoading ? (
         <span className="flex items-center gap-2">
-          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+          <svg aria-hidden="true" className="animate-spin h-4 w-4" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -45,13 +45,14 @@ export function GoogleAuthButton({ variant = 'accent', size = 'lg', className = 
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          Loading...
+          Loading…
         </span>
       ) : user ? (
         'Sign out'
       ) : (
         <span className="flex items-center gap-2">
           <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 48 48"
             width="16"

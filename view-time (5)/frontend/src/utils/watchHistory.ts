@@ -56,7 +56,7 @@ export async function recordWatchSession(
     
     // Get existing video stats if available
     // (This would typically be done with a transaction or batched write in production)
-    let existingStats: VideoStats | null = null;
+    const existingStats: VideoStats | null = null;
     
     try {
       // Try to get existing stats (code would be added here for a real implementation)

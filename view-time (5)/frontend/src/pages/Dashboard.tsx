@@ -21,6 +21,11 @@ import { RecommendationBreakdown } from "components/RecommendationBreakdown";
 import { SessionDurationChart } from "components/SessionDurationChart";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Link } from "react-router-dom";
+import { AnimatedPage } from "components/AnimatedPage";
+import { Atmosphere } from "components/Atmosphere";
+import { motion } from "framer-motion";
+import { staggerContainer } from "@/lib/motion";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -52,27 +57,32 @@ export default function Dashboard() {
   }, [user, status, analytics, loadAnalytics]);
 
   return (
+    <AnimatedPage>
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md">
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
+      <header className="sticky top-0 z-10 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
+          <Link to="/" className="flex items-center no-underline">
             <img src="/logo.png" alt="MirrorYourself Logo" className="h-8 w-8 mr-2" />
-            <h1 className="text-xl font-bold">MirrorYourself</h1>
-          </div>
+            <span className="text-xl font-bold text-foreground">MirrorYourself</span>
+          </Link>
           <UserProfile />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p className="text-muted-foreground mb-8">Welcome to your YouTube analytics dashboard!</p>
+      <main id="main-content" className="container mx-auto px-4 py-8">
+        <div className="relative">
+          <Atmosphere variant="primary" size="lg" className="absolute -top-24 -left-24 z-0" />
+          <h1 className="text-3xl font-display font-bold mb-6 relative z-10">Dashboard</h1>
+          <p className="text-muted-foreground mb-8 relative z-10">Welcome to your YouTube analytics dashboard!</p>
+        </div>
 
         <Tabs defaultValue="liked-videos" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
-            <TabsTrigger value="liked-videos" className="text-sm sm:text-base">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8 bg-transparent border border-border/50 backdrop-blur-sm">
+            <TabsTrigger value="liked-videos" className="text-sm sm:text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
               Liked Videos
             </TabsTrigger>
-            <TabsTrigger value="watch-history" className="text-sm sm:text-base">
+            <TabsTrigger value="watch-history" className="text-sm sm:text-base data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
               Watch History
             </TabsTrigger>
           </TabsList>
@@ -90,43 +100,47 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold tracking-tight mb-4">Overview</h2>
               <LikedVideosStats className="mb-6" />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <ShortsVsRegularChart />
-                <CategoryDistribution className="w-full h-full" />
-              </div>
+              <motion.div variants={staggerContainer} initial="initial" animate="animate">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <ShortsVsRegularChart />
+                  <CategoryDistribution className="w-full h-full" />
+                </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ChannelLoyaltyInsight className="w-full h-full" />
-              </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ChannelLoyaltyInsight className="w-full h-full" />
+                </div>
+              </motion.div>
             </div>
 
             {/* Detailed Analytics */}
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Analytics</h2>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-                <div className="col-span-1 xl:col-span-3">
-                  <TopKeywords className="w-full" />
+              <motion.div variants={staggerContainer} initial="initial" animate="animate">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                  <div className="col-span-1 xl:col-span-3">
+                    <TopKeywords className="w-full" />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-                <div className="col-span-1 lg:col-span-1 xl:col-span-2">
-                  <VideoLengthDistribution className="w-full h-full" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                  <div className="col-span-1 lg:col-span-1 xl:col-span-2">
+                    <VideoLengthDistribution className="w-full h-full" />
+                  </div>
+                  <div className="col-span-1">
+                    <ShortsCircularProgress className="w-full h-full" />
+                  </div>
                 </div>
-                <div className="col-span-1">
-                  <ShortsCircularProgress className="w-full h-full" />
+
+                <div className="grid grid-cols-1 gap-6 mb-6">
+                  <MonthlyTrendsChart className="w-full" />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-6 mb-6">
-                <MonthlyTrendsChart className="w-full" />
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TopChannels className="w-full h-full" limit={10} />
-                <LikesTimeHeatmap className="w-full h-full" />
-              </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <TopChannels className="w-full h-full" limit={10} />
+                  <LikesTimeHeatmap className="w-full h-full" />
+                </div>
+              </motion.div>
             </div>
           </TabsContent>
 
@@ -149,22 +163,25 @@ export default function Dashboard() {
               <div>
                 <h2 className="text-2xl font-bold tracking-tight mb-4">Detailed Insights</h2>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
-                  <SessionDurationChart className="w-full" />
-                  <RecommendationBreakdown className="w-full" />
-                </div>
+                <motion.div variants={staggerContainer} initial="initial" animate="animate">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+                    <SessionDurationChart className="w-full" />
+                    <RecommendationBreakdown className="w-full" />
+                  </div>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
-                  <ViewingHeatmap className="w-full" />
-                  <InAppNudges className="w-full" />
-                </div>
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+                    <ViewingHeatmap className="w-full" />
+                    <InAppNudges className="w-full" />
+                  </div>
 
-                <RepeatWatchList />
+                  <RepeatWatchList />
+                </motion.div>
               </div>
             )}
           </TabsContent>
         </Tabs>
       </main>
     </div>
+    </AnimatedPage>
   );
 }

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import useDataStore from "utils/dataStore";
 import { Heart, TrendingUp } from "lucide-react";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface ChannelLoyaltyInsightProps {
   className?: string;
@@ -36,24 +37,24 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
         type: "High Loyalty",
         description: "You're highly loyal to a small set of favorite channels",
         icon: Heart,
-        color: "text-red-600",
-        bgColor: "bg-red-50 dark:bg-red-900/20"
+        color: "text-destructive",
+        bgColor: "bg-destructive/10"
       };
     } else if (normalizedScore < 70) {
       return {
         type: "Balanced",
         description: "You have a balanced mix of favorite channels and exploration",
         icon: Heart,
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50 dark:bg-yellow-900/20"
+        color: "text-foreground",
+        bgColor: "bg-muted"
       };
     } else {
       return {
         type: "High Diversity",
         description: "You explore content from many different channels",
         icon: TrendingUp,
-        color: "text-green-600",
-        bgColor: "bg-green-50 dark:bg-green-900/20"
+        color: "text-foreground",
+        bgColor: "bg-muted"
       };
     }
   };
@@ -62,7 +63,7 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
   const Icon = interpretation.icon;
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon className={`h-5 w-5 ${interpretation.color}`} />
@@ -74,11 +75,9 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-48" label="Loading channel loyalty" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="text-center text-destructive py-8">
             Error loading analytics data
           </div>
         ) : !channelStats ? (

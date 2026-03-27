@@ -34,7 +34,7 @@ export const RepeatWatchList: React.FC<RepeatWatchListProps> = ({ className = ""
   }
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Repeat className="h-5 w-5" />

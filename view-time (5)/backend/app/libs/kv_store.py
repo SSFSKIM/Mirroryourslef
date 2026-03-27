@@ -3,6 +3,29 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+
+def _sanitize_keys(obj: Any) -> Any:
+    """Recursively sanitize dictionary keys for Firestore compatibility.
+
+    Firestore doesn't allow empty strings as field names.
+    This function replaces empty string keys with '_empty_' and
+    handles nested dictionaries and lists.
+    """
+    if isinstance(obj, dict):
+        sanitized = {}
+        for k, v in obj.items():
+            # Convert key to string and handle empty keys
+            key_str = str(k) if k is not None else "_none_"
+            if key_str == "":
+                key_str = "_empty_"
+            sanitized[key_str] = _sanitize_keys(v)
+        return sanitized
+    elif isinstance(obj, list):
+        return [_sanitize_keys(item) for item in obj]
+    else:
+        return obj
+
+
 # Optional Firestore client. Fallback to Databutton storage when unavailable.
 try:
     from google.cloud import firestore  # type: ignore
@@ -31,7 +54,9 @@ def put_json(key: str, value: Any) -> None:
     """
     try:
         if _has_firestore and _fs_client is not None:
-            doc = {"value": value, "updated_at": datetime.utcnow().isoformat()}
+            # Sanitize keys to prevent Firestore errors with empty string keys
+            sanitized_value = _sanitize_keys(value)
+            doc = {"value": sanitized_value, "updated_at": datetime.utcnow().isoformat()}
             _fs_client.collection(_COLLECTION).document(key).set(doc)
             return
 

@@ -51,3 +51,4 @@ temp/
 .idea/
 .vscode/
 extensions.json
+.gstack/

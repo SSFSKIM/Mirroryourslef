@@ -11,10 +11,10 @@ if (!("use" in React)) {
       typeof promise.then === "function"
     ) {
       // For promises, we need to handle the suspense mechanism
-      let status = promise.status;
+      const status = promise.status;
       if (status === undefined) {
         // Attach status to the promise
-        let suspender = promise;
+        const suspender = promise;
         suspender.status = "pending";
         suspender.then(
           (result) => {

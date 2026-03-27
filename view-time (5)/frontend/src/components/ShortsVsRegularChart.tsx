@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import useDataStore from 'utils/dataStore';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface ShortsVsRegularChartProps {
   className?: string;
@@ -11,6 +12,10 @@ interface ChartData {
   name: string;
   value: number;
   color: string;
+}
+
+interface ChartSummaryItem extends ChartData {
+  percentage: number;
 }
 
 const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }) => {
@@ -59,12 +64,12 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
       {
         name: 'Shorts',
         value: shortsAnalysis.total_shorts ?? shortsAnalysis.totalShorts ?? 0,
-        color: '#3b82f6'
+        color: 'hsl(var(--chart-1))'
       },
       {
         name: 'Long-form',
         value: shortsAnalysis.total_regular ?? shortsAnalysis.totalRegular ?? 0,
-        color: '#ef4444'
+        color: 'hsl(var(--chart-accent))'
       }
     ];
 
@@ -92,16 +97,35 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
     );
   };
 
+  const totalVideos = useMemo(
+    () => chartData.reduce((sum, item) => sum + item.value, 0),
+    [chartData]
+  );
+
+  const summaryData = useMemo<ChartSummaryItem[]>(
+    () => chartData.map((item) => ({
+      ...item,
+      percentage: totalVideos > 0 ? (item.value / totalVideos) * 100 : 0,
+    })),
+    [chartData, totalVideos]
+  );
+
+  const leadingType = useMemo(
+    () => summaryData.reduce<ChartSummaryItem | null>(
+      (leader, item) => (!leader || item.value > leader.value ? item : leader),
+      null
+    ),
+    [summaryData]
+  );
+
   if (isAnalyticsLoading && chartData.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={`glass-card ${className}`}>
         <CardHeader>
           <CardTitle>Shorts vs Long-form Videos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
+          <LoadingSpinner className="h-[300px]" label="Loading shorts analysis" />
         </CardContent>
       </Card>
     );
@@ -109,12 +133,12 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
 
   if (analyticsError) {
     return (
-      <Card className={className}>
+      <Card className={`glass-card ${className}`}>
         <CardHeader>
           <CardTitle>Shorts vs Long-form Videos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-gray-500">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
             <p>{analyticsError.message || 'Failed to load data'}</p>
           </div>
         </CardContent>
@@ -124,12 +148,12 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
 
   if (chartData.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={`glass-card ${className}`}>
         <CardHeader>
           <CardTitle>Shorts vs Long-form Videos</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-gray-500">
+          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
             <p>No analytics data available.</p>
           </div>
         </CardContent>
@@ -137,48 +161,86 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
     );
   }
 
-  const totalVideos = chartData.reduce((sum, item) => sum + item.value, 0);
-
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>Shorts vs Long-form Videos</CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <CardDescription>
           Distribution of video types in your liked videos ({totalVideos} total)
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderCustomizedLabel}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value: number, name: string) => [
-                  `${value} videos`,
-                  name
-                ]}
-              />
-              <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
-                formatter={(value: string, entry: any) => (
-                  <span style={{ color: entry.color }}>{value}</span>
-                )}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
+          <div aria-hidden="true" className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  outerRadius={80}
+                  fill="hsl(var(--chart-4))"
+                  dataKey="value"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    `${value} videos`,
+                    name
+                  ]}
+                />
+                <Legend
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  formatter={(value: string) => (
+                    <span className="text-sm text-muted-foreground">{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm font-medium text-foreground">
+                {leadingType?.name} currently leads your liked-video mix.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {leadingType
+                  ? `${Math.round(leadingType.percentage)}% of your sampled likes are ${leadingType.name.toLowerCase()}.`
+                  : 'No breakdown available yet.'}
+              </p>
+            </div>
+
+            <dl className="space-y-3">
+              {summaryData.map((item) => (
+                <div key={item.name} className="flex items-start justify-between gap-3 rounded-lg border p-3">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="mt-1 h-3 w-3 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div>
+                      <dt className="font-medium text-foreground">{item.name}</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {item.value} videos
+                      </dd>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-foreground">
+                      {Math.round(item.percentage)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">of total</p>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </CardContent>
     </Card>

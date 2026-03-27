@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import useDataStore from "utils/dataStore";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface TopKeywordsProps {
   className?: string;
@@ -56,7 +57,7 @@ export function TopKeywords({ className = "" }: TopKeywordsProps) {
   };
 
   return (
-    <Card className={className}>
+    <Card className={`glass-card ${className}`}>
       <CardHeader>
         <CardTitle>Top Keywords</CardTitle>
         <CardDescription>
@@ -65,11 +66,9 @@ export function TopKeywords({ className = "" }: TopKeywordsProps) {
       </CardHeader>
       <CardContent>
         {isAnalyticsLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
-          </div>
+          <LoadingSpinner className="h-48" label="Loading keywords" />
         ) : analyticsError ? (
-          <div className="text-center text-red-500 py-8">
+          <div className="text-center text-destructive py-8">
             Error loading analytics data
           </div>
         ) : !keywords || keywords.length === 0 ? (
