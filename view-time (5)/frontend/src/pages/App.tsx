@@ -215,17 +215,17 @@ export default function App() {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Link
                   to="/privacy-policy"
-                  className="hover:text-foreground transition-colors py-2 px-2"
+                  className="hover:text-foreground transition-colors py-3 px-2"
                 >
                   Privacy Policy
                 </Link>
                 <Link
                   to="/terms-of-service"
-                  className="hover:text-foreground transition-colors py-2 px-2"
+                  className="hover:text-foreground transition-colors py-3 px-2"
                 >
                   Terms of Service
                 </Link>
-                <span className="py-2 px-2">
+                <span className="py-3 px-2">
                   &copy; {new Date().getFullYear()} MirrorYourself
                 </span>
               </div>
