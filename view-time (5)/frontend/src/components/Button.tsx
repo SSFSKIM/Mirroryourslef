@@ -21,8 +21,6 @@ const buttonVariants = cva(
         link: "rounded-none px-0 text-primary shadow-none hover:text-primary/80 hover:underline underline-offset-4",
         accent:
           "border border-accent bg-accent text-accent-foreground shadow-[0_12px_24px_hsl(var(--accent)/0.18)] hover:bg-accent/92",
-        glow:
-          "border border-primary bg-primary text-primary-foreground shadow-[0_14px_28px_hsl(var(--primary)/0.18)] hover:bg-primary/92 hover:shadow-[0_18px_32px_hsl(var(--primary)/0.22)]",
       },
       size: {
         default: "h-10 px-4 py-2",

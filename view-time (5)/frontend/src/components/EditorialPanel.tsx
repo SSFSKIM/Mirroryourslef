@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "utils/cn";
 
 const editorialPanelVariants = cva(
-  "editorial-panel rounded-[calc(var(--radius)+0.25rem)] p-6 sm:p-7 transition-[border-color,box-shadow,background-color,transform] duration-200",
+  "editorial-panel rounded-[calc(var(--radius)+0.25rem)] border p-6 sm:p-7 transition-[border-color,box-shadow,background-color,transform] duration-200",
   {
     variants: {
       tone: {

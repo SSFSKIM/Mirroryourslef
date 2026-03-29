@@ -102,7 +102,7 @@ export default function App() {
                   variants={staggerItem}
                   className="flex flex-col sm:flex-row gap-4 mt-2"
                 >
-                  <Button asChild variant="glow" size="lg">
+                  <Button asChild variant="default" size="lg">
                     <Link to="/login">Get Started</Link>
                   </Button>
                   <Button asChild variant="ghost" size="lg">
@@ -197,7 +197,7 @@ export default function App() {
                   Sign in with Google, upload your Takeout data, and
                   MirrorYourself turns it into insights in under a minute.
                 </p>
-                <Button asChild variant="glow" size="lg">
+                <Button asChild variant="default" size="lg">
                   <Link to="/login">Sign in and start</Link>
                 </Button>
               </motion.div>
