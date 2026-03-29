@@ -12,13 +12,15 @@ export function AuthSection({ className = '' }: Props) {
   const { user } = useAuthStore();
 
   return (
-    <div className={`${className} flex items-center gap-4`}>
+    <div className={`${className} flex items-center gap-3`}>
       {user && (
         <Button asChild variant="ghost" size="sm">
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/dashboard" className="font-display tracking-tight">
+            Dashboard
+          </Link>
         </Button>
       )}
-      <GoogleAuthButton />
+      <GoogleAuthButton variant="outline" size="sm" />
     </div>
   );
 }

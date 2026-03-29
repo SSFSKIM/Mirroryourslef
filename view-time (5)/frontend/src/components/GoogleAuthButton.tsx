@@ -8,7 +8,7 @@ interface Props {
   className?: string;
 }
 
-export function GoogleAuthButton({ variant = 'accent', size = 'lg', className = '' }: Props) {
+export function GoogleAuthButton({ variant = 'outline', size = 'sm', className = '' }: Props) {
   const { user, signInWithGoogle, signOut, isLoading } = useAuthStore();
 
   const handleAuth = async () => {
@@ -25,7 +25,7 @@ export function GoogleAuthButton({ variant = 'accent', size = 'lg', className = 
       size={size}
       onClick={handleAuth}
       disabled={isLoading}
-      className={`hover:glow-accent-sm ${className}`}
+      className={className}
     >
       {isLoading ? (
         <span className="flex items-center gap-2">
