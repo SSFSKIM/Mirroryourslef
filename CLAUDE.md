@@ -259,3 +259,9 @@ See `.env.docker.example` and `.env.development.example` for full templates.
 - `frontend/src/brain/*` includes stale legacy endpoints alongside active ones
 - `frontend/vite.config.ts` injects Databutton defaults like `__APP_TITLE__ = "Databutton"`
 - Some comments describe Databutton-only behavior even though the repo also supports Docker and Cloud Run
+
+## Design System
+Always read DESIGN.md before making any visual or UI decisions.
+All font choices, colors, spacing, and aesthetic direction are defined there.
+Do not deviate without explicit user approval.
+In QA mode, flag any code that doesn't match DESIGN.md.

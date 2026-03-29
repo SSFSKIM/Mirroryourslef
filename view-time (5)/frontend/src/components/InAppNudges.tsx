@@ -1,7 +1,4 @@
 import React, { useMemo } from "react";
-import { BellRing, CheckCircle2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
 interface NudgeMessage {
@@ -82,39 +79,29 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
     return messages;
   }, [analytics]);
 
+  if (nudges.length === 0) {
+    return (
+      <div className={`py-6 border-t border-border text-center ${className}`}>
+        <p className="font-finding text-base text-accent">
+          Upload your watch history to reveal what your viewing patterns say about you.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Smart Nudges</CardTitle>
-          <CardDescription>Personalised guidance you can act on right now.</CardDescription>
-        </div>
-        <BellRing className="h-5 w-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {nudges.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Upload your watch history to activate AI nudges and goal suggestions.
+    <div className={className}>
+      {nudges.map((nudge, index) => (
+        <div
+          key={`${nudge.type}-${index}`}
+          className="py-5 border-t border-border last:border-b"
+        >
+          <p className="font-finding text-lg leading-relaxed text-accent">
+            {nudge.message}
           </p>
-        ) : (
-          nudges.map((nudge, index) => (
-            <div
-              key={`${nudge.type}-${index}`}
-              className="rounded-md border p-3 text-sm shadow-sm"
-            >
-              <div className="flex items-start space-x-2">
-                {nudge.type === "celebration" ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
-                ) : (
-                  <Badge variant="secondary" className="text-accent">Nudge</Badge>
-                )}
-                <p className="leading-relaxed text-muted-foreground">{nudge.message}</p>
-              </div>
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      ))}
+    </div>
   );
 };
 

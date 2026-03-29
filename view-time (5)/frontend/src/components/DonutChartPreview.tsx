@@ -8,10 +8,10 @@ interface Props {
 export function DonutChartPreview({ className }: Props) {
   // Mock data for categories
   const categories = [
-    { name: "Gaming", percentage: 47, color: "#f44336" }, // red
-    { name: "Music", percentage: 26, color: "#3b82f6" },  // blue
-    { name: "Cooking", percentage: 18, color: "#16a34a" }, // green
-    { name: "Other", percentage: 9, color: "#fb923c" }    // orange
+    { name: "Gaming", percentage: 47, color: "hsl(var(--chart-1))" },
+    { name: "Music", percentage: 26, color: "hsl(var(--chart-2))" },
+    { name: "Cooking", percentage: 18, color: "hsl(var(--chart-5))" },
+    { name: "Other", percentage: 9, color: "hsl(var(--chart-3))" }
   ];
 
   // Calculate the circumference and stroke dasharray for each segment
@@ -68,7 +68,7 @@ export function DonutChartPreview({ className }: Props) {
                 y="50" 
                 textAnchor="middle" 
                 dominantBaseline="middle"
-                className="text-xl font-bold fill-white"
+                className="text-xl font-bold fill-foreground"
               >
                 Chart
               </text>

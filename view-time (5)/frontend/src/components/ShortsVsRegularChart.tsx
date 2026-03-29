@@ -86,7 +86,7 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
       <text 
         x={x} 
         y={y} 
-        fill="white" 
+        fill="hsl(var(--foreground))"
         textAnchor={x > cx ? 'start' : 'end'} 
         dominantBaseline="central"
         fontSize={12}

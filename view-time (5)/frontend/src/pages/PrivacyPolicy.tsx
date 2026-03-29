@@ -14,18 +14,19 @@ const PrivacyPolicy = () => {
             <title>Privacy Policy - MirrorYourself</title>
             <style>
               body {
-                font-family: sans-serif;
+                font-family: 'Instrument Sans', sans-serif;
                 line-height: 1.6;
                 margin: 0;
                 padding: 2rem;
-                background-color: #f9f9f9;
-                color: #222;
+                background-color: hsl(var(--background));
+                color: hsl(var(--foreground));
               }
               h1, h2 {
-                color: #111;
+                font-family: 'Syne', sans-serif;
+                color: hsl(var(--foreground));
               }
               a {
-                color: #0066cc;
+                color: hsl(var(--primary));
               }
             </style>
           </head>
