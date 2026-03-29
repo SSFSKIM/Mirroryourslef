@@ -101,7 +101,7 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
       {nudges.map((nudge, index) => (
         <div
           key={`${nudge.type}-${index}`}
-          className="editorial-note py-4 border-t border-border-rule last:border-b last:border-border-rule"
+          className="editorial-note py-4 border-t border-rule last:border-b last:border-rule"
         >
           <p className="font-finding text-base leading-relaxed text-foreground sm:text-lg">
             {nudge.type === "celebration" && (

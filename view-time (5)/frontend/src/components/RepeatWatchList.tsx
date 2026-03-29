@@ -52,7 +52,7 @@ export const RepeatWatchList: React.FC<RepeatWatchListProps> = ({ className = ""
           {repeatWatches.map((watch, index) => (
             <div
               key={`${watch.videoId}-${index}`}
-              className="flex items-start justify-between rounded-lg border border-border-rule bg-paper px-4 py-3 transition-colors hover:bg-fog"
+              className="flex items-start justify-between rounded-lg border border-rule bg-paper px-4 py-3 transition-colors hover:bg-fog"
             >
               <div className="flex items-start gap-3 min-w-0 flex-1">
                 <span className="font-data text-xs text-muted-foreground mt-0.5 tabular-nums">

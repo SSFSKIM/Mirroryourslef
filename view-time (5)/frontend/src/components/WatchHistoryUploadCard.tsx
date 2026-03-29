@@ -134,7 +134,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
           <span className="text-sm">Loading status...</span>
         </div>
       ) : hasData ? (
-        <div className="rounded-lg border border-primary/20 bg-bg-fog px-4 py-3">
+        <div className="rounded-lg border border-primary/20 bg-fog px-4 py-3">
           <div className="flex items-start gap-3">
             <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>
@@ -164,7 +164,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
 
       {/* Success Message */}
       {uploadMessage && !error && (
-        <div className="rounded-lg border border-primary/20 bg-bg-fog px-4 py-3">
+        <div className="rounded-lg border border-primary/20 bg-fog px-4 py-3">
           <div className="flex items-start gap-3">
             <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <p className="text-sm text-foreground">{uploadMessage}</p>
@@ -197,7 +197,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
             relative w-full border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
             ${isDragging
               ? 'border-primary bg-primary/5 scale-[1.01]'
-              : 'border-border-rule hover:border-primary/40 hover:bg-paper'
+              : 'border-rule hover:border-primary/40 hover:bg-paper'
             }
             ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
           `}
@@ -262,7 +262,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         <div className="space-y-3 pl-2">
           {/* Step 1 */}
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
               1
             </div>
             <div className="flex-1 text-sm space-y-1">
@@ -281,7 +281,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
 
           {/* Step 2 */}
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
               2
             </div>
             <div className="flex-1 text-sm">
@@ -292,7 +292,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
 
           {/* Step 3 */}
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
               3
             </div>
             <div className="flex-1 text-sm">
@@ -303,7 +303,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
 
           {/* Step 4 */}
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
               4
             </div>
             <div className="flex-1 text-sm">
@@ -314,7 +314,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         </div>
 
         {/* Time Estimate */}
-        <div className="editorial-note rounded-lg border border-border-rule bg-paper px-4 py-3">
+        <div className="editorial-note rounded-lg border border-rule bg-paper px-4 py-3">
           <div className="flex items-start gap-3">
             <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
@@ -325,7 +325,7 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
         </div>
 
         {/* Privacy Note */}
-        <p className="text-xs text-ink-soft border-t border-border-rule pt-3">
+        <p className="text-xs text-ink-soft border-t border-rule pt-3">
           <strong className="text-foreground">Privacy:</strong> Your watch history is processed and stored securely in your private account.
           We never share your data with third parties. You can delete it anytime using the button above.
         </p>

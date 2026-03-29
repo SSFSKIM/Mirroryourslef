@@ -57,7 +57,7 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
 
   if (!analytics) {
     return (
-      <div className="empty-state rounded-lg border border-dashed border-border-rule p-6 text-center">
+      <div className="empty-state rounded-lg border border-dashed border-rule p-6 text-center">
         <p className="text-sm text-ink-soft">
           Upload your Google Takeout watch history to reveal viewing patterns and personalised nudges.
         </p>
