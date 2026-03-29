@@ -1,13 +1,11 @@
 /** Shared tooltip style object for Recharts charts — ensures consistent theming */
 export const chartTooltipStyle: React.CSSProperties = {
-  backgroundColor: "hsl(var(--card) / 0.8)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  border: "1px solid hsl(var(--border) / 0.5)",
-  borderRadius: "8px",
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "12px",
   color: "hsl(var(--card-foreground))",
   fontSize: "12px",
-  boxShadow: "0 0 20px hsl(var(--glow-primary) / 0.08)",
+  boxShadow: "0 18px 40px hsl(var(--foreground) / 0.08)",
 };
 
 import React from "react";
@@ -24,7 +22,7 @@ export function ChartTooltipContent({ active, payload, label, formatter }: Chart
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md">
+    <div className="rounded-xl border border-border bg-card px-3 py-2 text-xs shadow-[0_18px_40px_hsl(var(--foreground)/0.08)]">
       {label && <p className="mb-1 font-medium text-card-foreground">{label}</p>}
       {payload.map((entry, i) => {
         const [formattedValue, formattedName] = formatter
