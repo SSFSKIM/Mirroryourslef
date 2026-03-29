@@ -6,86 +6,108 @@
 
 @layer base {
   :root {
-    --background: 36 20% 95%;
-    --foreground: 30 8% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 30 8% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 8% 9%;
-    --primary: 168 72% 36%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 34 15% 91%;
-    --secondary-foreground: 30 8% 9%;
-    --muted: 34 15% 91%;
-    --muted-foreground: 36 5% 45%;
-    --accent: 30 35% 46%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 10 78% 54%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 30 11% 86%;
-    --input: 30 11% 86%;
-    --ring: 168 72% 36%;
+    color-scheme: light;
+    --paper: 42 38% 97%;
+    --paper-elevated: 38 29% 99%;
+    --ink: 18 14% 14%;
+    --ink-soft: 24 8% 37%;
+    --fog: 35 22% 92%;
+    --fog-strong: 32 19% 86%;
+    --rule: 26 14% 78%;
+    --signal: 158 52% 31%;
+    --signal-soft: 158 34% 92%;
+    --accent-warm: 22 58% 45%;
+    --warning-soft: 35 100% 94%;
+    --danger-soft: 8 78% 95%;
+    --danger-ink: 8 58% 40%;
+
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--paper-elevated);
+    --card-foreground: var(--ink);
+    --popover: var(--paper-elevated);
+    --popover-foreground: var(--ink);
+    --primary: var(--signal);
+    --primary-foreground: 42 38% 98%;
+    --secondary: var(--fog);
+    --secondary-foreground: var(--ink);
+    --muted: var(--fog);
+    --muted-foreground: var(--ink-soft);
+    --accent: var(--accent-warm);
+    --accent-foreground: 42 38% 98%;
+    --destructive: 8 66% 52%;
+    --destructive-foreground: 42 38% 98%;
+    --border: var(--rule);
+    --input: var(--rule);
+    --ring: var(--signal);
     --radius: 0.75rem;
 
-    --chart-1: 168 72% 36%;
-    --chart-2: 30 35% 46%;
-    --chart-3: 36 5% 45%;
-    --chart-4: 340 65% 55%;
-    --chart-5: 131 41% 46%;
-    --chart-6: 200 75% 50%;
-    --chart-7: 37 91% 55%;
-    --chart-8: 10 78% 54%;
-    --chart-9: 270 40% 50%;
-    --chart-10: 180 45% 38%;
-    --chart-11: 55 60% 42%;
-    --chart-12: 320 40% 48%;
-    --chart-accent: 168 72% 36%;
-    --chart-muted: 30 11% 86%;
-
-    --glow-primary: 168 72% 36%;
-    --glow-accent: 30 35% 46%;
+    --chart-1: 158 52% 31%;
+    --chart-2: 22 58% 45%;
+    --chart-3: 210 32% 42%;
+    --chart-4: 338 48% 48%;
+    --chart-5: 48 74% 40%;
+    --chart-6: 188 58% 38%;
+    --chart-7: 270 32% 46%;
+    --chart-8: 8 66% 52%;
+    --chart-9: 122 28% 42%;
+    --chart-10: 30 74% 52%;
+    --chart-11: 202 35% 32%;
+    --chart-12: 350 38% 42%;
+    --chart-accent: var(--signal);
+    --chart-muted: var(--fog-strong);
   }
 
   .dark {
     color-scheme: dark;
-    --background: 20 14% 4%;
-    --foreground: 38 12% 92%;
-    --card: 28 10% 8%;
-    --card-foreground: 38 12% 92%;
-    --popover: 28 10% 8%;
-    --popover-foreground: 38 12% 92%;
-    --primary: 168 66% 54%;
-    --primary-foreground: 20 14% 4%;
-    --secondary: 30 11% 11%;
-    --secondary-foreground: 38 10% 90%;
-    --muted: 30 11% 11%;
-    --muted-foreground: 36 5% 45%;
-    --accent: 29 43% 59%;
-    --accent-foreground: 20 14% 4%;
-    --destructive: 10 78% 54%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 30 11% 11%;
-    --input: 30 11% 11%;
-    --ring: 168 66% 54%;
-    --radius: 0.75rem;
+    --paper: 24 18% 10%;
+    --paper-elevated: 24 16% 13%;
+    --ink: 42 24% 92%;
+    --ink-soft: 34 10% 70%;
+    --fog: 25 13% 18%;
+    --fog-strong: 24 12% 24%;
+    --rule: 25 10% 29%;
+    --signal: 158 48% 62%;
+    --signal-soft: 158 26% 20%;
+    --accent-warm: 24 62% 66%;
+    --warning-soft: 35 42% 18%;
+    --danger-soft: 8 42% 18%;
+    --danger-ink: 8 72% 76%;
 
-    --chart-1: 168 66% 54%;
-    --chart-2: 29 43% 59%;
-    --chart-3: 36 5% 45%;
-    --chart-4: 340 70% 60%;
-    --chart-5: 131 41% 46%;
-    --chart-6: 200 80% 60%;
-    --chart-7: 37 91% 55%;
-    --chart-8: 10 78% 54%;
-    --chart-9: 270 45% 60%;
-    --chart-10: 180 50% 48%;
-    --chart-11: 55 65% 52%;
-    --chart-12: 320 45% 58%;
-    --chart-accent: 168 66% 54%;
-    --chart-muted: 30 11% 15%;
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--paper-elevated);
+    --card-foreground: var(--ink);
+    --popover: var(--paper-elevated);
+    --popover-foreground: var(--ink);
+    --primary: var(--signal);
+    --primary-foreground: 24 18% 10%;
+    --secondary: var(--fog);
+    --secondary-foreground: var(--ink);
+    --muted: var(--fog);
+    --muted-foreground: var(--ink-soft);
+    --accent: var(--accent-warm);
+    --accent-foreground: 24 18% 10%;
+    --destructive: 8 72% 62%;
+    --destructive-foreground: 24 18% 10%;
+    --border: var(--rule);
+    --input: var(--rule);
+    --ring: var(--signal);
 
-    --glow-primary: 168 66% 54%;
-    --glow-accent: 29 43% 59%;
+    --chart-1: 158 48% 62%;
+    --chart-2: 24 62% 66%;
+    --chart-3: 210 35% 68%;
+    --chart-4: 338 52% 68%;
+    --chart-5: 48 74% 56%;
+    --chart-6: 188 58% 58%;
+    --chart-7: 270 34% 68%;
+    --chart-8: 8 72% 62%;
+    --chart-9: 122 28% 60%;
+    --chart-10: 30 74% 64%;
+    --chart-11: 202 35% 62%;
+    --chart-12: 350 38% 68%;
+    --chart-accent: var(--signal);
+    --chart-muted: var(--fog-strong);
   }
 }
 
@@ -100,6 +122,10 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--signal-soft)) 0, transparent 32%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--paper-elevated)) 100%);
+    min-height: 100vh;
   }
 
   h1, h2, h3, .font-display {
@@ -120,6 +146,10 @@
     font-style: italic;
   }
 
+  h4, h5, h6 {
+    font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  }
+
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
@@ -131,64 +161,123 @@
   }
 }
 
-/* Glass card */
 @layer components {
-  .glass-card {
-    @apply rounded-[var(--radius)] border;
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-color: hsl(var(--border) / 0.5);
-    transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.26em];
+    color: hsl(var(--signal));
   }
 
-  .glass-card:hover {
-    border-color: hsl(var(--primary) / 0.2);
-    box-shadow: 0 0 20px hsl(var(--glow-primary) / 0.08);
+  .section-eyebrow::before {
+    content: "";
+    width: 1.75rem;
+    height: 1px;
+    background: hsl(var(--signal));
+  }
+
+  .divider-rule {
+    border: 0;
+    border-top: 1px solid hsl(var(--rule));
+    margin: 0;
+  }
+
+  .editorial-panel {
+    @apply rounded-[calc(var(--radius)+0.25rem)] border;
+    background:
+      linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
+    border-color: hsl(var(--border));
+    box-shadow: 0 18px 40px hsl(var(--ink) / 0.05);
+  }
+
+  .stat-block {
+    @apply rounded-[var(--radius)] border p-5;
+    background: hsl(var(--paper-elevated));
+    border-color: hsl(var(--border));
+  }
+
+  .stat-block-value {
+    @apply font-mono text-2xl font-semibold tracking-[-0.04em];
+    color: hsl(var(--foreground));
+  }
+
+  .stat-block-label {
+    @apply mt-2 text-xs font-semibold uppercase tracking-[0.18em];
+    color: hsl(var(--muted-foreground));
+  }
+
+  .editorial-note {
+    @apply rounded-[var(--radius)] border px-4 py-3 text-sm leading-6;
+    background: hsl(var(--signal-soft));
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+
+  .chart-caption {
+    @apply text-xs leading-5;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .loading-state,
+  .empty-state,
+  .error-state {
+    @apply rounded-[calc(var(--radius)+0.25rem)] border px-6 py-8;
+    border-color: hsl(var(--border));
+  }
+
+  .loading-state {
+    background:
+      linear-gradient(90deg, hsl(var(--fog)) 0%, hsl(var(--paper-elevated)) 50%, hsl(var(--fog)) 100%);
+    background-size: 200% 100%;
+    animation: editorial-shimmer 1.6s linear infinite;
+  }
+
+  .empty-state {
+    background: hsl(var(--fog) / 0.55);
+    color: hsl(var(--muted-foreground));
+  }
+
+  .error-state {
+    background: hsl(var(--danger-soft));
+    border-color: hsl(var(--destructive) / 0.22);
+    color: hsl(var(--danger-ink));
   }
 }
 
-/* Glow utilities */
 @layer utilities {
-  .glow-primary-sm { box-shadow: 0 0 8px hsl(var(--glow-primary) / 0.1); }
-  .glow-primary    { box-shadow: 0 0 20px hsl(var(--glow-primary) / 0.15); }
-  .glow-primary-lg { box-shadow: 0 0 40px hsl(var(--glow-primary) / 0.12); }
-  .glow-accent-sm  { box-shadow: 0 0 8px hsl(var(--glow-accent) / 0.1); }
-  .glow-accent     { box-shadow: 0 0 20px hsl(var(--glow-accent) / 0.15); }
-  .glow-accent-lg  { box-shadow: 0 0 40px hsl(var(--glow-accent) / 0.12); }
+  .text-ink-soft {
+    color: hsl(var(--ink-soft));
+  }
+
+  .bg-paper {
+    background-color: hsl(var(--paper));
+  }
+
+  .bg-fog {
+    background-color: hsl(var(--fog));
+  }
+
+  .border-rule {
+    border-color: hsl(var(--rule));
+  }
+
+  .text-signal {
+    color: hsl(var(--signal));
+  }
+
+  .shadow-editorial {
+    box-shadow: 0 18px 40px hsl(var(--ink) / 0.05);
+  }
 }
 
-/* Grain texture overlay */
-.grain-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.03;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+@keyframes editorial-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-/* Atmosphere orbs */
-.atmosphere {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.atmosphere-primary {
-  background: hsl(var(--glow-primary) / 0.07);
-}
-
-.atmosphere-accent {
-  background: hsl(var(--glow-accent) / 0.05);
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -197,6 +286,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .loading-state {
+    animation: none;
+    background-position: 50% 0;
   }
 }
 
