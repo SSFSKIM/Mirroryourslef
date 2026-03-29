@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { EditorialPanel } from "components/EditorialPanel";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
 interface NudgeMessage {
@@ -81,27 +82,43 @@ export const InAppNudges: React.FC<InAppNudgesProps> = ({ className = "" }) => {
 
   if (nudges.length === 0) {
     return (
-      <div className={`py-6 border-t border-border text-center ${className}`}>
-        <p className="font-finding text-base text-accent">
-          Upload your watch history to reveal what your viewing patterns say about you.
-        </p>
-      </div>
+      <EditorialPanel tone="quiet" className={className}>
+        <div className="empty-state py-4 text-center">
+          <p className="font-finding text-base text-muted-foreground">
+            Upload your watch history to reveal what your viewing patterns say about you.
+          </p>
+        </div>
+      </EditorialPanel>
     );
   }
 
   return (
-    <div className={className}>
+    <EditorialPanel tone="quiet" className={`space-y-0 ${className}`}>
+      <div className="section-eyebrow mb-4">
+        <span>What Stands Out</span>
+      </div>
+
       {nudges.map((nudge, index) => (
         <div
           key={`${nudge.type}-${index}`}
-          className="py-5 border-t border-border last:border-b"
+          className="editorial-note py-4 border-t border-border-rule last:border-b last:border-border-rule"
         >
-          <p className="font-finding text-lg leading-relaxed text-accent">
+          <p className="font-finding text-base leading-relaxed text-foreground sm:text-lg">
+            {nudge.type === "celebration" && (
+              <span className="mr-2 inline-block text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                Positive
+              </span>
+            )}
+            {nudge.type === "insight" && (
+              <span className="mr-2 inline-block text-xs font-semibold uppercase tracking-[0.15em] text-signal">
+                Observation
+              </span>
+            )}
             {nudge.message}
           </p>
         </div>
       ))}
-    </div>
+    </EditorialPanel>
   );
 };
 

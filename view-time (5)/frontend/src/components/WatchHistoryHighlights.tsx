@@ -1,7 +1,6 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flame, Timer, SplitSquareHorizontal, Sparkles, Gauge } from "lucide-react";
-
+import { Flame, Timer, SplitSquareHorizontal, Sparkles } from "lucide-react";
+import { StatCard } from "./StatCard";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
 const formatMinutes = (value: number): string => {
@@ -44,16 +43,13 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
 
   if (isLoadingAnalytics) {
     return (
-      <div className={`grid grid-cols-1 gap-4 lg:grid-cols-4 ${className}`}>
+      <div className={`loading-state grid grid-cols-1 gap-4 lg:grid-cols-4 ${className}`}>
         {Array.from({ length: 4 }).map((_, index) => (
-          <Card key={index} className="glass-card animate-pulse">
-            <CardHeader>
-              <div className="h-4 w-24 rounded bg-muted" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-6 w-20 rounded bg-muted" />
-            </CardContent>
-          </Card>
+          <div key={index} className="animate-pulse rounded-[calc(var(--radius)+0.25rem)] border border-border/70 bg-paper p-6">
+            <div className="mb-4 h-3 w-24 rounded bg-muted" />
+            <div className="mb-2 h-10 w-20 rounded bg-muted" />
+            <div className="h-3 w-28 rounded bg-muted" />
+          </div>
         ))}
       </div>
     );
@@ -61,8 +57,10 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
 
   if (!analytics) {
     return (
-      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-        Upload your Google Takeout watch history to reveal viewing patterns and personalised nudges.
+      <div className="empty-state rounded-lg border border-dashed border-border-rule p-6 text-center">
+        <p className="text-sm text-ink-soft">
+          Upload your Google Takeout watch history to reveal viewing patterns and personalised nudges.
+        </p>
       </div>
     );
   }
@@ -72,73 +70,39 @@ export const WatchHistoryHighlights: React.FC<WatchHistoryHighlightsProps> = ({ 
   const shortsMinutes = analytics.shorts_total_minutes ?? weeklyMinutes * (analytics.shorts_share ?? 0);
   const avgSessionDuration = analytics.average_session_duration_minutes ?? 0;
   const avgVideosPerSession = analytics.average_videos_per_session ?? 0;
-  const avgShortsStreak = analytics.average_shorts_streak_minutes ?? 0;
-  const longestSession = analytics.longest_session_minutes ?? avgSessionDuration;
-  const algorithmicMinutes = analytics.algorithmic_minutes ?? weeklyMinutes * (analytics.algorithmic_view_share ?? 0);
-  const intentionalMinutes = analytics.intentional_minutes ?? weeklyMinutes * (analytics.intentional_view_share ?? 0);
   const algorithmicShare = analytics.algorithmic_view_share ?? 0;
-  const intentionalShare = analytics.intentional_view_share ?? 0;
+  const algorithmicMinutes = analytics.algorithmic_minutes ?? weeklyMinutes * algorithmicShare;
+  const intentionalMinutes = analytics.intentional_minutes ?? weeklyMinutes * (analytics.intentional_view_share ?? 0);
 
   return (
     <div className={`grid grid-cols-1 gap-4 lg:grid-cols-4 ${className}`}>
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium">Daily Average Viewing</CardTitle>
-          <Timer className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">{formatMinutes(dailyAverage)}</p>
-          <p className="text-xs text-muted-foreground">Based on your imported history</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Daily Average"
+        value={formatMinutes(dailyAverage)}
+        subtitle="Based on your imported history"
+        icon={Timer}
+      />
 
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium">Weekly Watch Time</CardTitle>
-          <Sparkles className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">{formatHours(weeklyMinutes)}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatHours(shortsMinutes)} of that is Shorts — {percentage(shortsMinutes / (weeklyMinutes || 1))}
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Weekly Watch Time"
+        value={formatHours(weeklyMinutes)}
+        subtitle={`${formatHours(shortsMinutes)} of that is Shorts \u2014 ${percentage(shortsMinutes / (weeklyMinutes || 1))}`}
+        icon={Sparkles}
+      />
 
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium">Algorithmic Influence</CardTitle>
-          <Flame className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">{percentage(algorithmicShare)}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatMinutes(algorithmicMinutes)} vs {formatMinutes(intentionalMinutes)} intentional viewing
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Algorithmic Influence"
+        value={percentage(algorithmicShare)}
+        subtitle={`${formatMinutes(algorithmicMinutes)} vs ${formatMinutes(intentionalMinutes)} intentional`}
+        icon={Flame}
+      />
 
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-medium">Session Rhythm</CardTitle>
-          <SplitSquareHorizontal className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="space-y-1 text-sm">
-          <p className="flex items-center gap-2">
-            <Gauge className="h-3 w-3 text-muted-foreground" />
-            <span><span className="font-semibold">{formatMinutes(avgSessionDuration)}</span> avg session</span>
-          </p>
-          <p>
-            <span className="font-semibold">{avgVideosPerSession.toFixed(1)}</span> videos per session
-          </p>
-          <p>
-            Longest recent session <span className="font-semibold">{formatMinutes(longestSession)}</span>
-          </p>
-          <p>
-            Shorts streak ~<span className="font-semibold">{formatMinutes(avgShortsStreak)}</span>
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Session Rhythm"
+        value={formatMinutes(avgSessionDuration)}
+        subtitle={`${avgVideosPerSession.toFixed(1)} videos per session on average`}
+        icon={SplitSquareHorizontal}
+      />
     </div>
   );
 };

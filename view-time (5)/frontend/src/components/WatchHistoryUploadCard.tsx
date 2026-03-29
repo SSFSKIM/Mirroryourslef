@@ -1,8 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Upload, Trash2, CheckCircle2, AlertCircle, Loader2, FileText, Download, ExternalLink } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EditorialPanel } from "components/EditorialPanel";
+import { Button } from "components/Button";
 import { Progress } from "@/components/ui/progress";
 import useWatchHistoryStore from "utils/watchHistoryStore";
 
@@ -109,209 +108,229 @@ const WatchHistoryUploadCard: React.FC<WatchHistoryUploadCardProps> = ({ classNa
   const hasData = status && status.total_events && status.total_events > 0;
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText aria-hidden="true" className="h-5 w-5" />
-          Watch History Import
-        </CardTitle>
-        <CardDescription>
-          Upload your YouTube takeout data to unlock personalized viewing analytics and insights.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Status Display */}
-        {isLoadingStatus ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-            <span>Loading status…</span>
-          </div>
-        ) : hasData ? (
-          <Alert>
-            <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
-            <AlertDescription>
-              <strong>{status.total_events?.toLocaleString()} events</strong> processed successfully
+    <EditorialPanel tone="primary" className={`space-y-6 ${className}`}>
+      {/* Header */}
+      <div className="space-y-2">
+        <div className="section-eyebrow">
+          <span className="flex items-center gap-2">
+            <FileText aria-hidden="true" className="h-3.5 w-3.5" />
+            Archive Intake
+          </span>
+        </div>
+        <h3 className="font-display text-xl font-semibold tracking-[-0.03em] text-foreground sm:text-2xl">
+          Import Your Archive
+        </h3>
+        <p className="text-sm leading-6 text-muted-foreground max-w-xl">
+          Upload your YouTube Takeout data to unlock a personalized behavior report with viewing analytics and insights.
+        </p>
+      </div>
+
+      <div className="divider-rule" />
+
+      {/* Status Display */}
+      {isLoadingStatus ? (
+        <div className="loading-state flex items-center gap-2 text-muted-foreground">
+          <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+          <span className="text-sm">Loading status...</span>
+        </div>
+      ) : hasData ? (
+        <div className="rounded-lg border border-primary/20 bg-bg-fog px-4 py-3">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <div>
+              <p className="font-data text-lg font-semibold text-foreground">
+                {status.total_events?.toLocaleString()} events
+              </p>
+              <p className="text-sm text-muted-foreground">processed successfully</p>
               {status.last_uploaded_at && (
-                <span className="block text-sm text-muted-foreground mt-1">
+                <p className="mt-1 text-xs text-ink-soft">
                   Last updated: {new Date(status.last_uploaded_at).toLocaleDateString()}
-                </span>
+                </p>
               )}
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {/* Error Display */}
-        {(error || fileValidationError) && (
-          <Alert variant="destructive">
-            <AlertCircle aria-hidden="true" className="h-4 w-4" />
-            <AlertDescription>{error || fileValidationError}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Success Message */}
-        {uploadMessage && !error && (
-          <Alert>
-            <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
-            <AlertDescription>{uploadMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Upload Progress */}
-        {isUploading && (
-          <div className="space-y-2" aria-live="polite">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Processing your watch history…</span>
-              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
-            </div>
-            <Progress value={undefined} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">
-              This usually takes 2-5 minutes depending on file size.
-            </p>
-          </div>
-        )}
-
-        {/* Drag & Drop Zone */}
-        {!isUploading && (
-          <button
-            type="button"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`
-              relative w-full border-2 border-dashed rounded-lg p-8 text-center transition-all
-              ${isDragging
-                ? 'border-primary bg-primary/5 scale-[1.02] glow-primary-sm'
-                : 'border-muted hover:border-primary/50 hover:bg-accent/50'
-              }
-              ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-            `}
-            onClick={handleFileSelect}
-            aria-describedby="watch-history-upload-help"
-            aria-busy={isUploading}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className={`p-4 rounded-full ${isDragging ? 'bg-primary/10' : 'bg-muted'}`}>
-                <Upload aria-hidden="true" className={`h-8 w-8 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-lg font-medium">
-                  {isDragging ? 'Drop your file here' : 'Drop your Takeout file here'}
-                </p>
-                <p id="watch-history-upload-help" className="text-sm text-muted-foreground">
-                  or click to browse • Accepts .json or .zip files
-                </p>
-              </div>
-
-              <span className="mt-2 inline-flex h-9 items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
-                {hasData ? "Update Data" : "Choose File"}
-              </span>
-            </div>
-          </button>
-        )}
-
-        <input
-          ref={fileInputRef}
-          id="watch-history-file-input"
-          name="watch-history-file"
-          type="file"
-          accept=".json,.zip"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        {/* Delete Button (only show if data exists) */}
-        {hasData && !isUploading && (
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            size="sm"
-            className="w-full"
-          >
-            <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
-            Delete All Watch History Data
-          </Button>
-        )}
-
-        {/* Step-by-Step Guide */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Download aria-hidden="true" className="h-4 w-4 text-primary" />
-            <h4 className="font-semibold text-sm">How to Get Your YouTube Takeout</h4>
-          </div>
-
-          <div className="space-y-3 pl-6">
-            {/* Step 1 */}
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                1
-              </div>
-              <div className="flex-1 text-sm space-y-1">
-                <p className="font-medium">Visit Google Takeout</p>
-                <a
-                  href="https://takeout.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline flex items-center gap-1"
-                >
-                  takeout.google.com
-                  <ExternalLink aria-hidden="true" className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                2
-              </div>
-              <div className="flex-1 text-sm">
-                <p className="font-medium mb-1">Select YouTube Data</p>
-                <p className="text-muted-foreground">Click "Deselect all" → Check only "YouTube and YouTube Music"</p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                3
-              </div>
-              <div className="flex-1 text-sm">
-                <p className="font-medium mb-1">Choose History Only</p>
-                <p className="text-muted-foreground">Click "All YouTube data included" → Select only "watch-history.json"</p>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                4
-              </div>
-              <div className="flex-1 text-sm">
-                <p className="font-medium mb-1">Download & Upload</p>
-                <p className="text-muted-foreground">Click "Next step" → "Create export" → Wait for email → Download → Upload here</p>
-              </div>
             </div>
           </div>
+        </div>
+      ) : null}
 
-          {/* Time Estimate */}
-          <Alert className="border-primary/20 bg-primary/5">
-            <AlertCircle aria-hidden="true" className="h-4 w-4 text-primary" />
-            <AlertDescription>
-              <strong>Expected time:</strong> Google Takeout preparation takes 15-30 minutes.
-              You'll receive an email when ready. File processing takes 2-5 minutes after upload.
-            </AlertDescription>
-          </Alert>
+      {/* Error Display */}
+      {(error || fileValidationError) && (
+        <div className="error-state rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <p className="text-sm text-destructive">{error || fileValidationError}</p>
+          </div>
+        </div>
+      )}
 
-          {/* Privacy Note */}
-          <p className="text-xs text-muted-foreground border-t pt-3">
-            <strong>Privacy:</strong> Your watch history is processed and stored securely in your private account.
-            We never share your data with third parties. You can delete it anytime using the button above.
+      {/* Success Message */}
+      {uploadMessage && !error && (
+        <div className="rounded-lg border border-primary/20 bg-bg-fog px-4 py-3">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-sm text-foreground">{uploadMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Progress */}
+      {isUploading && (
+        <div className="loading-state space-y-3" aria-live="polite">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Processing your watch history...</span>
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+          </div>
+          <Progress value={undefined} className="h-1.5" />
+          <p className="text-xs text-ink-soft text-center">
+            This usually takes 2-5 minutes depending on file size.
           </p>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Drag & Drop Zone */}
+      {!isUploading && (
+        <button
+          type="button"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`
+            relative w-full border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
+            ${isDragging
+              ? 'border-primary bg-primary/5 scale-[1.01]'
+              : 'border-border-rule hover:border-primary/40 hover:bg-paper'
+            }
+            ${isUploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+          `}
+          onClick={handleFileSelect}
+          aria-describedby="watch-history-upload-help"
+          aria-busy={isUploading}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div className={`p-3 rounded-full ${isDragging ? 'bg-primary/10' : 'bg-fog'}`}>
+              <Upload aria-hidden="true" className={`h-7 w-7 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+            </div>
+
+            <div className="space-y-1">
+              <p className="font-display text-base font-medium tracking-[-0.02em]">
+                {isDragging ? 'Drop your file here' : 'Drop your Takeout file here'}
+              </p>
+              <p id="watch-history-upload-help" className="text-sm text-ink-soft">
+                or click to browse &middot; Accepts .json or .zip files
+              </p>
+            </div>
+
+            <Button type="button" variant="outline" size="sm" className="mt-2 pointer-events-none">
+              <Upload aria-hidden="true" className="mr-2 h-3.5 w-3.5" />
+              {hasData ? "Update Data" : "Choose File"}
+            </Button>
+          </div>
+        </button>
+      )}
+
+      <input
+        ref={fileInputRef}
+        id="watch-history-file-input"
+        name="watch-history-file"
+        type="file"
+        accept=".json,.zip"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* Delete Button (only show if data exists) */}
+      {hasData && !isUploading && (
+        <Button
+          variant="destructive"
+          onClick={handleDelete}
+          size="sm"
+          className="w-full"
+        >
+          <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
+          Delete All Watch History Data
+        </Button>
+      )}
+
+      {/* Step-by-Step Guide */}
+      <div className="space-y-4">
+        <div className="divider-rule" />
+
+        <div className="flex items-center gap-2">
+          <Download aria-hidden="true" className="h-4 w-4 text-primary" />
+          <h4 className="section-eyebrow !mb-0">How to Get Your YouTube Takeout</h4>
+        </div>
+
+        <div className="space-y-3 pl-2">
+          {/* Step 1 */}
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+              1
+            </div>
+            <div className="flex-1 text-sm space-y-1">
+              <p className="font-medium">Visit Google Takeout</p>
+              <a
+                href="https://takeout.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-signal hover:underline flex items-center gap-1"
+              >
+                takeout.google.com
+                <ExternalLink aria-hidden="true" className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+              2
+            </div>
+            <div className="flex-1 text-sm">
+              <p className="font-medium mb-1">Select YouTube Data</p>
+              <p className="text-ink-soft">Click "Deselect all" then check only "YouTube and YouTube Music"</p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+              3
+            </div>
+            <div className="flex-1 text-sm">
+              <p className="font-medium mb-1">Choose History Only</p>
+              <p className="text-ink-soft">Click "All YouTube data included" then select only "watch-history.json"</p>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full border border-border-rule bg-paper flex items-center justify-center text-xs font-data font-semibold text-foreground">
+              4
+            </div>
+            <div className="flex-1 text-sm">
+              <p className="font-medium mb-1">Download & Upload</p>
+              <p className="text-ink-soft">Click "Next step" then "Create export" then wait for email, download, and upload here</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Time Estimate */}
+        <div className="editorial-note rounded-lg border border-border-rule bg-paper px-4 py-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Expected time:</strong> Google Takeout preparation takes 15-30 minutes.
+              You'll receive an email when ready. File processing takes 2-5 minutes after upload.
+            </p>
+          </div>
+        </div>
+
+        {/* Privacy Note */}
+        <p className="text-xs text-ink-soft border-t border-border-rule pt-3">
+          <strong className="text-foreground">Privacy:</strong> Your watch history is processed and stored securely in your private account.
+          We never share your data with third parties. You can delete it anytime using the button above.
+        </p>
+      </div>
+    </EditorialPanel>
   );
 };
 

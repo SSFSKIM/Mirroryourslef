@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import { AlertCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useWatchHistoryStore from "utils/watchHistoryStore";
@@ -38,38 +38,39 @@ export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ clas
 
   if (isLoadingAnalytics) {
     return (
-      <Card className={`glass-card ${className} animate-pulse`}>
-        <CardHeader>
-          <CardTitle>Recommendation Sources</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-48 rounded bg-muted" />
-        </CardContent>
-      </Card>
+      <AnalyticsPanel
+        title="Recommendation Sources"
+        caption="What drives your viewing \u2014 algorithm vs intentional"
+        className={`${className} animate-pulse`}
+      >
+        <div className="loading-state h-48 rounded bg-muted" />
+      </AnalyticsPanel>
     );
   }
 
   if (!analytics || !data.length) {
     return (
-      <Card className={`glass-card ${className}`}>
-        <CardHeader className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <CardTitle className="text-base">Recommendation Sources</CardTitle>
-            <CardDescription>Upload your watch history to see how each surface influences your viewing.</CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+      <AnalyticsPanel
+        title="Recommendation Sources"
+        caption="What drives your viewing \u2014 algorithm vs intentional"
+        className={className}
+      >
+        <div className="empty-state flex h-40 items-center justify-center gap-2 text-sm text-muted-foreground">
+          <AlertCircle className="h-4 w-4" />
+          <span>Upload your watch history to see how each surface influences your viewing.</span>
+        </div>
+      </AnalyticsPanel>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Recommendation Sources</CardTitle>
-        <CardDescription>Top surfaces that led you to watch — higher bars mean more plays.</CardDescription>
-      </CardHeader>
-      <CardContent className="h-64">
+    <AnalyticsPanel
+      eyebrow="Viewing Sources"
+      title="Recommendation Sources"
+      caption="What drives your viewing \u2014 algorithm vs intentional"
+      className={className}
+    >
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -85,15 +86,15 @@ export const RecommendationBreakdown: React.FC<{ className?: string }> = ({ clas
               }
               return [`${payload.value} views (${payload.percentage}%)`, "Views"];
             }} />
-            <Bar dataKey="percentage" radius={[0, 4, 4, 0]}> 
+            <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
               {data.map((entry, index) => (
                 <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </AnalyticsPanel>
   );
 };
 
