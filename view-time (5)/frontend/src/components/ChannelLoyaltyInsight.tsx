@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EditorialPanel } from "components/EditorialPanel";
 import { Progress } from "@/components/ui/progress";
 import useDataStore from "utils/dataStore";
 import { Heart, TrendingUp } from "lucide-react";
@@ -38,7 +38,6 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
         description: "You're highly loyal to a small set of favorite channels",
         icon: Heart,
         color: "text-destructive",
-        bgColor: "bg-destructive/10"
       };
     } else if (normalizedScore < 70) {
       return {
@@ -46,7 +45,6 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
         description: "You have a balanced mix of favorite channels and exploration",
         icon: Heart,
         color: "text-foreground",
-        bgColor: "bg-muted"
       };
     } else {
       return {
@@ -54,7 +52,6 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
         description: "You explore content from many different channels",
         icon: TrendingUp,
         color: "text-foreground",
-        bgColor: "bg-muted"
       };
     }
   };
@@ -63,32 +60,33 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
   const Icon = interpretation.icon;
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon className={`h-5 w-5 ${interpretation.color}`} />
+    <EditorialPanel tone="quiet" className={`flex h-full flex-col gap-5 ${className}`}>
+      <div className="flex items-center gap-2">
+        <Icon className={`h-4 w-4 ${interpretation.color}`} />
+        <h3 className="font-display text-lg font-semibold tracking-tight text-foreground">
           Channel Preference Pattern
-        </CardTitle>
-        <CardDescription>
-          Analysis of your channel loyalty vs exploration habits
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <p className="chart-caption text-sm text-muted-foreground">
+        Analysis of your channel loyalty vs exploration habits
+      </p>
+
+      <div className="flex-1 border-t border-border/70 pt-5">
         {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-48" label="Loading channel loyalty" />
+          <LoadingSpinner className="loading-state h-48" label="Loading channel loyalty" />
         ) : analyticsError ? (
-          <div className="text-center text-destructive py-8">
+          <div className="error-state py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : !channelStats ? (
-          <div className="text-center text-muted-foreground py-8">
+          <div className="empty-state py-8 text-center text-muted-foreground">
             No channel data available yet. Sync your YouTube liked videos to see your pattern.
           </div>
         ) : (
           <div className="space-y-6">
             {/* Interpretation Badge */}
-            <div className={`p-4 rounded-lg ${interpretation.bgColor}`}>
-              <div className={`text-lg font-bold ${interpretation.color} mb-1`}>
+            <div className="rounded-lg border border-border/70 bg-paper p-4">
+              <div className={`font-finding text-base font-bold ${interpretation.color} mb-1`}>
                 {interpretation.type}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -98,7 +96,7 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
 
             {/* Loyalty vs Diversity Spectrum */}
             <div className="space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <div className="mb-1 flex justify-between text-xs text-muted-foreground">
                 <span>High Loyalty</span>
                 <span>High Diversity</span>
               </div>
@@ -106,25 +104,25 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
                 value={normalizedScore}
                 className="h-3"
               />
-              <div className="text-center text-sm font-medium mt-2">
-                {isLoyaltyOriented ? 'Loyalty' : 'Diversity'} Score: {normalizedScore.toFixed(0)}%
+              <div className="mt-2 text-center text-sm font-medium">
+                {isLoyaltyOriented ? 'Loyalty' : 'Diversity'} Score: <span className="font-data">{normalizedScore.toFixed(0)}%</span>
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted p-3 rounded-lg">
-                <div className="text-xs text-muted-foreground">Unique Channels</div>
-                <div className="text-2xl font-bold">{totalUniqueChannels}</div>
+              <div className="rounded-lg border border-border/70 bg-paper p-3">
+                <div className="section-eyebrow text-xs text-muted-foreground">Unique Channels</div>
+                <div className="font-data text-2xl font-bold">{totalUniqueChannels}</div>
               </div>
-              <div className="bg-muted p-3 rounded-lg">
-                <div className="text-xs text-muted-foreground">Avg Likes/Channel</div>
-                <div className="text-2xl font-bold">{avgLikesPerChannel.toFixed(1)}</div>
+              <div className="rounded-lg border border-border/70 bg-paper p-3">
+                <div className="section-eyebrow text-xs text-muted-foreground">Avg Likes/Channel</div>
+                <div className="font-data text-2xl font-bold">{avgLikesPerChannel.toFixed(1)}</div>
               </div>
             </div>
 
             {/* Insight */}
-            <div className="text-xs text-muted-foreground border-t pt-4">
+            <div className="editorial-note border-t border-border/70 pt-4 text-xs text-muted-foreground">
               {isLoyaltyOriented ? (
                 <>
                   <strong>What this means:</strong> You tend to stick with channels you trust and enjoy.
@@ -139,7 +137,7 @@ export function ChannelLoyaltyInsight({ className = "" }: ChannelLoyaltyInsightP
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </EditorialPanel>
   );
 }

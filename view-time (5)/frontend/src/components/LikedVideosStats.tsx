@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from './StatCard';
 import { Clock, Users, Video } from 'lucide-react';
 import useDataStore from 'utils/dataStore';
 
@@ -74,18 +74,13 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
 
   if (isAnalyticsLoading) {
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
+      <div className={`loading-state grid grid-cols-1 gap-4 md:grid-cols-3 ${className}`}>
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="glass-card animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 rounded bg-muted"></div>
-              <div className="h-4 w-4 rounded bg-muted"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-1 h-8 w-16 rounded bg-muted"></div>
-              <div className="h-3 w-20 rounded bg-muted"></div>
-            </CardContent>
-          </Card>
+          <div key={i} className="animate-pulse rounded-[calc(var(--radius)+0.25rem)] border border-border/70 bg-paper p-6">
+            <div className="mb-4 h-3 w-24 rounded bg-muted"></div>
+            <div className="mb-2 h-10 w-20 rounded bg-muted"></div>
+            <div className="h-3 w-28 rounded bg-muted"></div>
+          </div>
         ))}
       </div>
     );
@@ -93,7 +88,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
 
   if (analyticsError) {
     return (
-      <div className={`p-4 text-center text-muted-foreground ${className}`}>
+      <div className={`error-state p-4 text-center text-muted-foreground ${className}`}>
         <p>{analyticsError.message || 'Failed to load analytics data.'}</p>
       </div>
     );
@@ -101,7 +96,7 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
 
   if (!analyticsPayload) {
     return (
-      <div className={`p-4 text-center text-muted-foreground ${className}`}>
+      <div className={`empty-state p-4 text-center text-muted-foreground ${className}`}>
         <p>No analytics data available. Please sync your liked videos first.</p>
       </div>
     );
@@ -124,48 +119,27 @@ const LikedVideosStats: React.FC<LikedVideosStatsProps> = ({ className }) => {
     ?? 0;
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
-      {/* Average Video Length */}
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Average Video Length</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatDuration(averageLength)}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Based on last {desiredSampleSize} liked videos
-          </p>
-        </CardContent>
-      </Card>
+    <div className={`grid grid-cols-1 gap-4 md:grid-cols-3 ${className}`}>
+      <StatCard
+        label="Average Video Length"
+        value={formatDuration(averageLength)}
+        subtitle={`Based on last ${desiredSampleSize} liked videos`}
+        icon={Clock}
+      />
 
-      {/* Number of Unique Channels */}
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Unique Channels</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalChannels}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            From last {desiredSampleSize} liked videos
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Unique Channels"
+        value={totalChannels}
+        subtitle={`From last ${desiredSampleSize} liked videos`}
+        icon={Users}
+      />
 
-      {/* Shorts vs Long-form Ratio */}
-      <Card className="glass-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Shorts vs Long-form</CardTitle>
-          <Video className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{shortsPercentage.toFixed(1)}%</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalShorts} shorts, {totalRegular} long-form (N = {desiredSampleSize})
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        label="Shorts vs Long-form"
+        value={`${shortsPercentage.toFixed(1)}%`}
+        subtitle={`${totalShorts} shorts, ${totalRegular} long-form (N = ${desiredSampleSize})`}
+        icon={Video}
+      />
     </div>
   );
 };

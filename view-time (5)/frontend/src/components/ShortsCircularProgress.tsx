@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EditorialPanel } from "components/EditorialPanel";
 import useDataStore from "utils/dataStore";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -49,33 +49,36 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
   };
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Shorts vs Regular Videos</CardTitle>
-        <CardDescription>
-          Distribution of liked videos by content type • Based on last {nUsed} liked videos ({totalVideos} total)
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-center">
+    <EditorialPanel tone="quiet" className={`flex h-full flex-col gap-4 p-5 sm:p-6 ${className}`}>
+      <div>
+        <h3 className="font-display text-lg font-semibold tracking-tight text-foreground">
+          Shorts vs Regular Videos
+        </h3>
+        <p className="chart-caption mt-1 text-xs text-muted-foreground">
+          Based on last {nUsed} liked videos ({totalVideos} total)
+        </p>
+      </div>
+
+      <div className="flex-1 border-t border-border/70 pt-4">
         {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-48" label="Loading shorts breakdown" />
+          <LoadingSpinner className="loading-state h-48" label="Loading shorts breakdown" />
         ) : analyticsError ? (
-          <div className="py-8 text-center text-destructive">
+          <div className="error-state py-8 text-center text-destructive">
             Error loading analytics data
           </div>
         ) : !analytics ? (
-          <div className="text-center text-muted-foreground py-8">
+          <div className="empty-state py-8 text-center text-muted-foreground">
             No data available yet. Sync your YouTube liked videos to see your distribution.
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-6">
+          <div className="flex flex-col items-center justify-center py-4">
             <div
-              className="relative flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 rounded-full"
+              className="relative flex h-36 w-36 items-center justify-center rounded-full sm:h-48 sm:w-48"
               style={getCircleStyle(shortsPercentage)}
             >
-              <div className="absolute w-28 h-28 sm:w-40 sm:h-40 bg-card rounded-full flex items-center justify-center">
+              <div className="absolute flex h-28 w-28 items-center justify-center rounded-full bg-[hsl(var(--paper-elevated)/0.82)] sm:h-40 sm:w-40">
                 <div className="text-center">
-                  <div className="text-4xl font-bold">
+                  <div className="font-data text-4xl font-bold">
                     {Math.round(shortsPercentage)}%
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -86,7 +89,7 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
             </div>
             <div className="mt-4 flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-accent))" }}></div>
+                <div className="h-3 w-3 rounded" style={{ backgroundColor: "hsl(var(--chart-accent))" }}></div>
                 <span>Shorts ({Math.round(shortsPercentage)}%)</span>
               </div>
               <div className="flex items-center gap-2">
@@ -96,7 +99,7 @@ export function ShortsCircularProgress({ className = "" }: ShortsCircularProgres
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </EditorialPanel>
   );
 }

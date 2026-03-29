@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import useDataStore from "utils/dataStore";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -14,7 +14,7 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="custom-tooltip bg-card p-2 shadow-md border border-border rounded">
+      <div className="custom-tooltip rounded border border-border bg-card p-2 shadow-md">
         <p className="font-bold">{label} minutes</p>
         <p>
           <span className="text-muted-foreground">Count: </span>
@@ -32,13 +32,13 @@ interface VideoLengthDistributionProps {
 
 export function VideoLengthDistribution({ className = "" }: VideoLengthDistributionProps) {
   const { analytics, isAnalyticsLoading, analyticsError, loadAnalytics } = useDataStore();
-  
+
   React.useEffect(() => {
     if (!analytics) {
       loadAnalytics();
     }
   }, [analytics, loadAnalytics]);
-  
+
   // Format data for the chart from duration analysis
   const formattedData = React.useMemo(() => {
     const distribution = (analytics as any)?.durationAnalysis?.distribution || (analytics as any)?.analytics?.durationAnalysis?.distribution;
@@ -54,14 +54,14 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
         { range: "60+", count: 0, label: "60+" }
       ];
     }
-    
+
     return distribution.map((item: any, index: number) => ({
       range: item.range || `${index * 5}-${(index + 1) * 5}`,
       count: item.count || 0,
       label: item.range || `${index * 5}-${(index + 1) * 5}`
     }));
   }, [analytics]);
-  
+
   // Active N used for the analysis
   const nUsed = React.useMemo(() => {
     const topLevelN = (analytics as any)?.sample_size ?? (analytics as any)?.analytics?.sample_size;
@@ -69,68 +69,64 @@ export function VideoLengthDistribution({ className = "" }: VideoLengthDistribut
     const sum = formattedData.reduce((acc, cur) => acc + (cur.count || 0), 0);
     return sum;
   }, [analytics, formattedData]);
-  
+
   // Calculate maximum count for better Y-axis scaling
   const maxCount = React.useMemo(() => {
     if (!formattedData.length) return 100;
     const max = Math.max(...formattedData.map(item => item.count));
     return Math.ceil(max * 1.1); // Add 10% padding
   }, [formattedData]);
-  
+
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Video Length Distribution</CardTitle>
-        <CardDescription>
-          Number of liked videos by length (in minutes) • Based on last {nUsed} liked videos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-72" label="Loading video length distribution" />
-        ) : analyticsError ? (
-          <div className="py-8 text-center text-destructive">
-            Error loading analytics data
-          </div>
-        ) : !formattedData || formattedData.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            No video length data available yet. Sync your YouTube liked videos to see distribution.
-          </div>
-        ) : (
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={formattedData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" className="opacity-30" />
-                <XAxis 
-                  dataKey="label" 
-                  className="text-xs"
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fontSize: 12 }}
-                  domain={[0, maxCount]}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="count" 
-                  fill="hsl(var(--chart-accent))"
-                  radius={[2, 2, 0, 0]}
-                  name="Video Count"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <AnalyticsPanel
+      title="Video Length Distribution"
+      caption={`Number of liked videos by length (in minutes) \u00b7 Based on last ${nUsed} liked videos`}
+      className={className}
+    >
+      {isAnalyticsLoading ? (
+        <LoadingSpinner className="loading-state h-72" label="Loading video length distribution" />
+      ) : analyticsError ? (
+        <div className="error-state py-8 text-center text-destructive">
+          Error loading analytics data
+        </div>
+      ) : !formattedData || formattedData.length === 0 ? (
+        <div className="empty-state py-8 text-center text-muted-foreground">
+          No video length data available yet. Sync your YouTube liked videos to see distribution.
+        </div>
+      ) : (
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={formattedData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" className="opacity-30" />
+              <XAxis
+                dataKey="label"
+                className="text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis
+                className="text-xs"
+                tick={{ fontSize: 12 }}
+                domain={[0, maxCount]}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar
+                dataKey="count"
+                fill="hsl(var(--chart-accent))"
+                radius={[2, 2, 0, 0]}
+                name="Video Count"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </AnalyticsPanel>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import useDataStore from "utils/dataStore";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -56,78 +56,74 @@ export function LikesTimeHeatmap({ className = "" }: LikesTimeHeatmapProps) {
   const nUsed = (analytics as any)?.sample_size ?? (analytics as any)?.analytics?.sample_size ?? 0;
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Likes Activity Patterns</CardTitle>
-        <CardDescription>
-          When you liked videos by day and time • Based on last {nUsed} liked videos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-96" label="Loading activity patterns" />
-        ) : analyticsError ? (
-          <div className="text-center text-destructive py-8">
-            Error loading analytics data
+    <AnalyticsPanel
+      title="Likes Activity Patterns"
+      caption={`When you tend to like videos throughout the week \u00b7 Based on last ${nUsed} liked videos`}
+      className={className}
+    >
+      {isAnalyticsLoading ? (
+        <LoadingSpinner className="loading-state h-96" label="Loading activity patterns" />
+      ) : analyticsError ? (
+        <div className="error-state py-8 text-center text-destructive">
+          Error loading analytics data
+        </div>
+      ) : !contentTrends ? (
+        <div className="empty-state py-8 text-center text-muted-foreground">
+          No temporal data available yet. Sync your YouTube liked videos to see patterns.
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Day of Week Chart */}
+          <div>
+            <h3 className="section-eyebrow mb-4 text-sm">By Day of Week</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={dayOfWeekData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {dayOfWeekData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getColorIntensity(entry.count, maxDayCount)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        ) : !contentTrends ? (
-          <div className="text-center text-muted-foreground py-8">
-            No temporal data available yet. Sync your YouTube liked videos to see patterns.
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Day of Week Chart */}
-            <div>
-              <h3 className="text-sm font-semibold mb-4">By Day of Week</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={dayOfWeekData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {dayOfWeekData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getColorIntensity(entry.count, maxDayCount)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
 
-            {/* Hourly Chart */}
-            <div>
-              <h3 className="text-sm font-semibold mb-4">By Hour of Day</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={hourlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
-                  <XAxis
-                    dataKey="hourLabel"
-                    interval={2}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis />
-                  <Tooltip
-                    contentStyle={chartTooltipStyle}
-                    labelFormatter={(value) => `Hour: ${value}`}
-                  />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {hourlyData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getColorIntensity(entry.count, maxHourCount)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Activity Summary */}
-            {contentTrends?.most_active_period && (
-              <div className="text-sm text-muted-foreground text-center">
-                Most active period: <span className="font-semibold text-foreground">{contentTrends.most_active_period}</span>
-              </div>
-            )}
+          {/* Hourly Chart */}
+          <div>
+            <h3 className="section-eyebrow mb-4 text-sm">By Hour of Day</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={hourlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-muted))" />
+                <XAxis
+                  dataKey="hourLabel"
+                  interval={2}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  labelFormatter={(value) => `Hour: ${value}`}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {hourlyData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getColorIntensity(entry.count, maxHourCount)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Activity Summary */}
+          {contentTrends?.most_active_period && (
+            <p className="chart-caption text-center text-sm text-muted-foreground">
+              Most active period: <span className="font-data font-semibold text-foreground">{contentTrends.most_active_period}</span>
+            </p>
+          )}
+        </div>
+      )}
+    </AnalyticsPanel>
   );
 }

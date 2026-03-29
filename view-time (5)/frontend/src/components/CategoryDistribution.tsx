@@ -1,8 +1,8 @@
 import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import useDataStore from "utils/dataStore";
-import { Button } from "@/components/ui/button";
+import { Button } from "components/Button";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 interface CategoryDistributionProps {
@@ -19,14 +19,14 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="custom-tooltip bg-card p-2 shadow-md border border-border rounded">
+      <div className="custom-tooltip rounded border border-border bg-card p-2 shadow-md">
         <p className="font-bold">{data.category}</p>
         <p><span className="text-muted-foreground">Videos:</span> {data.count} videos</p>
         <p><span className="text-muted-foreground">Percentage:</span> {Math.round(data.percentage)}%</p>
       </div>
     );
   }
-  
+
   return null;
 };
 
@@ -48,15 +48,15 @@ const CHART_COLORS = [
 
 export function CategoryDistribution({ className = "" }: CategoryDistributionProps) {
   const { analytics, isAnalyticsLoading, analyticsError, loadAnalytics, loadSyncStatus } = useDataStore();
-  
+
   React.useEffect(() => {
     if (!analytics) {
       loadAnalytics();
     }
   }, [analytics, loadAnalytics]);
-  
+
   const categoryDistribution = analytics?.categoryBreakdown || [];
-  
+
   const formattedData = React.useMemo(() => {
     if (!Array.isArray(categoryDistribution) || categoryDistribution.length === 0) {
       return [];
@@ -84,7 +84,7 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
       .filter((item) => item.count > 0)
       .sort((a, b) => b.count - a.count);
   }, [categoryDistribution]);
-  
+
   // Derive active sample size (N)
   const nUsed = React.useMemo(() => {
     const totalCount = categoryDistribution?.reduce?.((acc: number, curr: any) => acc + (curr?.count || 0), 0) || 0;
@@ -122,7 +122,7 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
     () => formatWatchTime(aggregateWatchTime),
     [aggregateWatchTime, formatWatchTime]
   );
-  
+
   // Custom label renderer for the donut chart
   const renderCustomizedLabel = (props: any) => {
     const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
@@ -130,15 +130,15 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    
+
     if (percent < 0.05) return null; // Don't show labels for small slices
-    
+
     return (
-      <text 
-        x={x} 
-        y={y} 
+      <text
+        x={x}
+        y={y}
         fill="hsl(var(--foreground))"
-        textAnchor="middle" 
+        textAnchor="middle"
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"
@@ -147,79 +147,75 @@ export function CategoryDistribution({ className = "" }: CategoryDistributionPro
       </text>
     );
   };
-  
+
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Category Distribution</CardTitle>
-        <CardDescription>
-          Liked videos share by category • Based on last {nUsed} liked videos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-72" label="Loading category distribution" />
-        ) : analyticsError ? (
-          <div className="py-8 text-center text-destructive">
-            Error loading analytics data
+    <AnalyticsPanel
+      title="Category Distribution"
+      caption={`What categories define your viewing taste \u00b7 Based on last ${nUsed} liked videos`}
+      className={className}
+    >
+      {isAnalyticsLoading ? (
+        <LoadingSpinner className="loading-state h-72" label="Loading category distribution" />
+      ) : analyticsError ? (
+        <div className="error-state py-8 text-center text-destructive">
+          Error loading analytics data
+        </div>
+      ) : formattedData.length === 0 ? (
+        <div className="empty-state py-8 text-center text-muted-foreground">
+          <p>No category data available yet. Sync your YouTube liked videos to see your distribution.</p>
+          <Button className="mt-4" variant="outline" onClick={() => void loadSyncStatus()}>
+            Sync liked videos
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="h-72 w-full" role="img" aria-label="Liked videos by category">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={formattedData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  outerRadius={80}
+                  innerRadius={40}
+                  fill="hsl(var(--chart-accent))"
+                  dataKey="count"
+                  nameKey="category"
+                >
+                  {formattedData.map((entry, index) => (
+                    <Cell key={`cell-${entry.category}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  formatter={(value) => (
+                    <span className="text-sm text-muted-foreground">{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        ) : formattedData.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p>No category data available yet. Sync your YouTube liked videos to see your distribution.</p>
-            <Button className="mt-4" variant="outline" onClick={() => void loadSyncStatus()}>
-              Sync liked videos
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="h-72 w-full" role="img" aria-label="Liked videos by category">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={formattedData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={80}
-                    innerRadius={40}
-                    fill="hsl(var(--chart-accent))"
-                    dataKey="count"
-                    nameKey="category"
-                  >
-                    {formattedData.map((entry, index) => (
-                      <Cell key={`cell-${entry.category}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36}
-                    formatter={(value) => (
-                      <span className="text-sm text-muted-foreground">{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            {topCategories.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <p>
-                  Top categories:{" "}
-                  {topCategories
-                    .map((cat) => `${cat.category} (${Math.round(cat.percentage)}%)`)
-                    .join(" • ")}
+          {topCategories.length > 0 && (
+            <div className="chart-caption text-sm text-muted-foreground">
+              <p>
+                Top categories:{" "}
+                {topCategories
+                  .map((cat) => `${cat.category} (${Math.round(cat.percentage)}%)`)
+                  .join(" \u00b7 ")}
+              </p>
+              {readableWatchTime && (
+                <p className="mt-1">
+                  Covers approximately {readableWatchTime} of liked content.
                 </p>
-                {readableWatchTime && (
-                  <p className="mt-1">
-                    Covers approximately {readableWatchTime} of liked content.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </AnalyticsPanel>
   );
 }

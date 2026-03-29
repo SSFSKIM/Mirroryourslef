@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import { Badge } from "@/components/ui/badge";
 import useDataStore from "utils/dataStore";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -49,7 +49,7 @@ export function TopKeywords({ className = "" }: TopKeywordsProps) {
     return totalVideos;
   }, [analytics, keywords]);
 
-  // Function to get badge color based on frequency rank
+  // Function to get badge style based on frequency rank
   const getBadgeVariant = (index: number) => {
     if (index < 3) return "default"; // Top 3 keywords
     if (index < 6) return "secondary"; // Next 3 keywords
@@ -57,45 +57,43 @@ export function TopKeywords({ className = "" }: TopKeywordsProps) {
   };
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Top Keywords</CardTitle>
-        <CardDescription>
-          Most frequent keywords from your liked video titles • Based on last {nUsed} liked videos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-48" label="Loading keywords" />
-        ) : analyticsError ? (
-          <div className="text-center text-destructive py-8">
-            Error loading analytics data
+    <AnalyticsPanel
+      title="Top Keywords"
+      caption={`Most frequent terms from your liked video titles \u00b7 Based on last ${nUsed} liked videos`}
+      className={className}
+    >
+      {isAnalyticsLoading ? (
+        <LoadingSpinner className="loading-state h-48" label="Loading keywords" />
+      ) : analyticsError ? (
+        <div className="error-state py-8 text-center text-destructive">
+          Error loading analytics data
+        </div>
+      ) : !keywords || keywords.length === 0 ? (
+        <div className="empty-state py-8 text-center text-muted-foreground">
+          No keyword data available yet. Sync your YouTube liked videos to see analysis.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {keywords.slice(0, 20).map((keyword, index) => (
+              <Badge
+                key={keyword.keyword}
+                variant={getBadgeVariant(index)}
+                className="rounded-sm px-3 py-1 font-mono text-sm tracking-tight"
+              >
+                <span className="mr-1.5 text-xs text-muted-foreground">{index + 1}.</span>
+                {keyword.keyword}
+                <span className="ml-1.5 text-xs text-muted-foreground">({keyword.frequency})</span>
+              </Badge>
+            ))}
           </div>
-        ) : !keywords || keywords.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            No keyword data available yet. Sync your YouTube liked videos to see analysis.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {keywords.slice(0, 20).map((keyword, index) => (
-                <Badge
-                  key={keyword.keyword}
-                  variant={getBadgeVariant(index)}
-                  className="text-sm py-1 px-3"
-                >
-                  {keyword.keyword} ({keyword.frequency})
-                </Badge>
-              ))}
-            </div>
-            {keywords.length > 20 && (
-              <div className="text-center text-sm text-muted-foreground">
-                And {keywords.length - 20} more keywords...
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {keywords.length > 20 && (
+            <p className="chart-caption text-center text-sm text-muted-foreground">
+              And {keywords.length - 20} more keywords...
+            </p>
+          )}
+        </div>
+      )}
+    </AnalyticsPanel>
   );
 }

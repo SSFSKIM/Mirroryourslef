@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AnalyticsPanel } from 'components/AnalyticsPanel';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import useDataStore from 'utils/dataStore';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -83,11 +83,11 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
+      <text
+        x={x}
+        y={y}
         fill="hsl(var(--foreground))"
-        textAnchor={x > cx ? 'start' : 'end'} 
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"
@@ -120,130 +120,111 @@ const ShortsVsRegularChart: React.FC<ShortsVsRegularChartProps> = ({ className }
 
   if (isAnalyticsLoading && chartData.length === 0) {
     return (
-      <Card className={`glass-card ${className}`}>
-        <CardHeader>
-          <CardTitle>Shorts vs Long-form Videos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LoadingSpinner className="h-[300px]" label="Loading shorts analysis" />
-        </CardContent>
-      </Card>
+      <AnalyticsPanel title="Shorts vs Long-form Videos" className={className}>
+        <LoadingSpinner className="loading-state h-[300px]" label="Loading shorts analysis" />
+      </AnalyticsPanel>
     );
   }
 
   if (analyticsError) {
     return (
-      <Card className={`glass-card ${className}`}>
-        <CardHeader>
-          <CardTitle>Shorts vs Long-form Videos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-            <p>{analyticsError.message || 'Failed to load data'}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <AnalyticsPanel title="Shorts vs Long-form Videos" className={className}>
+        <div className="error-state flex h-[300px] items-center justify-center text-muted-foreground">
+          <p>{analyticsError.message || 'Failed to load data'}</p>
+        </div>
+      </AnalyticsPanel>
     );
   }
 
   if (chartData.length === 0) {
     return (
-      <Card className={`glass-card ${className}`}>
-        <CardHeader>
-          <CardTitle>Shorts vs Long-form Videos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-            <p>No analytics data available.</p>
-          </div>
-        </CardContent>
-      </Card>
+      <AnalyticsPanel title="Shorts vs Long-form Videos" className={className}>
+        <div className="empty-state flex h-[300px] items-center justify-center text-muted-foreground">
+          <p>No analytics data available.</p>
+        </div>
+      </AnalyticsPanel>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Shorts vs Long-form Videos</CardTitle>
-        <CardDescription>
-          Distribution of video types in your liked videos ({totalVideos} total)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
-          <div aria-hidden="true" className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomizedLabel}
-                  outerRadius={80}
-                  fill="hsl(var(--chart-4))"
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${value} videos`,
-                    name
-                  ]}
-                />
-                <Legend
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  formatter={(value: string) => (
-                    <span className="text-sm text-muted-foreground">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+    <AnalyticsPanel
+      title="Shorts vs Long-form Videos"
+      caption={`How your likes split between short and long-form content (${totalVideos} total)`}
+      className={className}
+    >
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
+        <div aria-hidden="true" className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderCustomizedLabel}
+                outerRadius={80}
+                fill="hsl(var(--chart-4))"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  `${value} videos`,
+                  name
+                ]}
+              />
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                formatter={(value: string) => (
+                  <span className="text-sm text-muted-foreground">{value}</span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border/70 bg-paper p-4">
+            <p className="font-finding text-sm font-medium text-foreground">
+              {leadingType?.name} currently leads your liked-video mix.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {leadingType
+                ? `${Math.round(leadingType.percentage)}% of your sampled likes are ${leadingType.name.toLowerCase()}.`
+                : 'No breakdown available yet.'}
+            </p>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <p className="text-sm font-medium text-foreground">
-                {leadingType?.name} currently leads your liked-video mix.
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {leadingType
-                  ? `${Math.round(leadingType.percentage)}% of your sampled likes are ${leadingType.name.toLowerCase()}.`
-                  : 'No breakdown available yet.'}
-              </p>
-            </div>
-
-            <dl className="space-y-3">
-              {summaryData.map((item) => (
-                <div key={item.name} className="flex items-start justify-between gap-3 rounded-lg border p-3">
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="mt-1 h-3 w-3 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <div>
-                      <dt className="font-medium text-foreground">{item.name}</dt>
-                      <dd className="text-sm text-muted-foreground">
-                        {item.value} videos
-                      </dd>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">
-                      {Math.round(item.percentage)}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">of total</p>
+          <dl className="space-y-3">
+            {summaryData.map((item) => (
+              <div key={item.name} className="flex items-start justify-between gap-3 rounded-lg border border-border/70 p-3">
+                <div className="flex items-start gap-3">
+                  <span
+                    className="mt-1 h-3 w-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div>
+                    <dt className="font-medium text-foreground">{item.name}</dt>
+                    <dd className="text-sm text-muted-foreground">
+                      {item.value} videos
+                    </dd>
                   </div>
                 </div>
-              ))}
-            </dl>
-          </div>
+                <div className="text-right">
+                  <p className="font-data font-semibold text-foreground">
+                    {Math.round(item.percentage)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">of total</p>
+                </div>
+              </div>
+            ))}
+          </dl>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AnalyticsPanel>
   );
 };
 

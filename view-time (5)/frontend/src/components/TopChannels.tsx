@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AnalyticsPanel } from "components/AnalyticsPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import useDataStore from "utils/dataStore";
@@ -56,48 +56,46 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
   }, [analytics, topChannels]);
 
   return (
-    <Card className={`glass-card ${className}`}>
-      <CardHeader>
-        <CardTitle>Top {limit} Channels</CardTitle>
-        <CardDescription>
-          Ranked by number of liked videos • Based on last {nUsed} liked videos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAnalyticsLoading ? (
-          <LoadingSpinner className="h-72" label="Loading top channels" />
-        ) : analyticsError ? (
-          <div className="py-8 text-center text-destructive">
-            Error loading analytics data.
-          </div>
-        ) : !topChannels || topChannels.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            No channel data available yet. Sync your YouTube liked videos to see your top channels.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {topChannels.slice(0, limit).map((channel, index) => {
-              // Support both snake_case and camelCase
-              const channelId = channel.channel_id || channel.channelId || '';
-              const channelName = channel.channel_name || channel.channelName || 'Unknown';
-              const videoCount = channel.video_count || channel.videoCount || 0;
+    <AnalyticsPanel
+      eyebrow="Ranked List"
+      title={`Top ${limit} Channels`}
+      caption={`Ranked by number of liked videos \u00b7 Based on last ${nUsed} liked videos`}
+      className={className}
+    >
+      {isAnalyticsLoading ? (
+        <LoadingSpinner className="loading-state h-72" label="Loading top channels" />
+      ) : analyticsError ? (
+        <div className="error-state py-8 text-center text-destructive">
+          Error loading analytics data.
+        </div>
+      ) : !topChannels || topChannels.length === 0 ? (
+        <div className="empty-state py-8 text-center text-muted-foreground">
+          No channel data available yet. Sync your YouTube liked videos to see your top channels.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {topChannels.slice(0, limit).map((channel, index) => {
+            // Support both snake_case and camelCase
+            const channelId = channel.channel_id || (channel as any).channelId || '';
+            const channelName = channel.channel_name || (channel as any).channelName || 'Unknown';
+            const videoCount = channel.video_count || (channel as any).videoCount || 0;
 
-              // Get channel info from map if available
-              const channelInfo = channelInfoMap[channelId];
-              const thumbnailUrl = channelInfo?.thumbnailUrl ||
-                                  channelInfo?.thumbnail_url ||
-                                  `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=ef4444&color=fff&size=40&bold=true`;
+            // Get channel info from map if available
+            const channelInfo = channelInfoMap[channelId];
+            const thumbnailUrl = channelInfo?.thumbnailUrl ||
+                                channelInfo?.thumbnail_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=ef4444&color=fff&size=40&bold=true`;
 
-              return (
-                <div key={channelName + index} className="flex items-center space-x-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {index + 1}
-                  </div>
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={thumbnailUrl} alt={channelName} />
-                    <AvatarFallback>{channelName.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                <div className="flex-1 min-w-0">
+            return (
+              <div key={channelName + index} className="flex items-center space-x-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-paper font-data text-sm font-semibold text-primary">
+                  {index + 1}
+                </div>
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={thumbnailUrl} alt={channelName} />
+                  <AvatarFallback>{channelName.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
                     {channelName}
                   </p>
@@ -108,18 +106,17 @@ export function TopChannels({ className = "", limit = 10 }: TopChannelsProps) {
                 <div className="flex items-center space-x-2">
                   <Progress
                     value={(videoCount / maxVideoCount) * 100}
-                    className="w-20 h-2"
+                    className="h-2 w-20"
                   />
-                  <span className="min-w-[2rem] text-right text-xs text-muted-foreground">
+                  <span className="min-w-[2rem] text-right font-data text-xs text-muted-foreground">
                     {videoCount}
                   </span>
                 </div>
               </div>
             );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          })}
+        </div>
+      )}
+    </AnalyticsPanel>
   );
 }

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Button } from 'components/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { EditorialPanel } from 'components/EditorialPanel';
 import { useAuthStore } from 'utils/auth';
 import useDataStore from 'utils/dataStore';
 import { Loader2, Youtube, CheckCircle, AlertCircle, BarChart3 } from 'lucide-react';
 import { firebaseAuth } from 'app';
-import { 
-  GoogleAuthProvider, 
+import {
+  GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth';
 import brain from 'brain';
@@ -272,29 +272,29 @@ export default function YouTubeSyncButton() {
 
   return (
     <section className="space-y-4" aria-labelledby="liked-videos-sync-title">
-      <div className="glass-card rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+      <EditorialPanel tone="secondary">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3 min-w-0">
             <div className="mt-0.5 rounded-md bg-red-500/10 p-2">
               <Youtube aria-hidden="true" className="h-5 w-5 text-red-500" />
             </div>
             <div className="min-w-0">
-              <h3 id="liked-videos-sync-title" className="font-semibold">
+              <h3 id="liked-videos-sync-title" className="font-display text-lg font-semibold tracking-tight">
                 YouTube Liked Videos Analytics
               </h3>
               <p className="text-sm text-muted-foreground">
-              {syncStatus.lastSync 
+              {syncStatus.lastSync
                 ? `Last synced: ${formatLastSync(syncStatus.lastSync)}`
                 : 'Not synced yet'}
               </p>
               {syncStatus.itemsProcessed ? (
                 <div className="mt-2 space-y-1">
-                  <p className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400">
+                  <p className="flex items-center gap-1 text-sm text-signal">
                     <CheckCircle aria-hidden="true" className="h-3.5 w-3.5" />
                     {syncStatus.itemsProcessed} liked videos synced
                   </p>
                   {syncStatus.analyticsGenerated && (
-                    <p className="flex items-center gap-1 text-sm text-sky-600 dark:text-sky-400">
+                    <p className="flex items-center gap-1 text-sm text-primary">
                       <BarChart3 aria-hidden="true" className="h-3.5 w-3.5" />
                       Analytics generated
                     </p>
@@ -307,7 +307,7 @@ export default function YouTubeSyncButton() {
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end lg:w-auto">
             {!needsAuth && (
               <div className="flex w-full flex-col gap-2 sm:w-auto">
-                <label htmlFor="liked-video-sample-size" className="text-xs font-medium text-muted-foreground">
+                <label htmlFor="liked-video-sample-size" className="section-eyebrow text-xs">
                   Sample Size
                 </label>
                 <Select
@@ -341,7 +341,7 @@ export default function YouTubeSyncButton() {
               {isSyncing ? (
                 <>
                   <Loader2 aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
-                  {needsAuth ? 'Authenticating…' : 'Syncing…'}
+                  {needsAuth ? 'Authenticating...' : 'Syncing...'}
                 </>
               ) : needsAuth ? (
                 <>
@@ -357,31 +357,37 @@ export default function YouTubeSyncButton() {
             </Button>
           </div>
         </div>
-      </div>
+      </EditorialPanel>
 
       {syncStatus.error && (
-        <Alert variant="destructive">
-          <AlertCircle aria-hidden="true" className="h-4 w-4" />
-          <AlertDescription>{syncStatus.error}</AlertDescription>
-        </Alert>
+        <div className="error-state rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <div className="flex items-start gap-2">
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 text-destructive" />
+            <p className="text-sm text-destructive">{syncStatus.error}</p>
+          </div>
+        </div>
       )}
 
       {needsAuth && !isSyncing && (
-        <Alert>
-          <Youtube aria-hidden="true" className="h-4 w-4" />
-          <AlertDescription>
-            Connect your YouTube account to analyze your liked videos. Select an account and grant YouTube access to get started.
-          </AlertDescription>
-        </Alert>
+        <div className="editorial-note rounded-lg border border-border/70 bg-paper p-4">
+          <div className="flex items-start gap-2">
+            <Youtube aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Connect your YouTube account to analyze your liked videos. Select an account and grant YouTube access to get started.
+            </p>
+          </div>
+        </div>
       )}
-      
+
       {!needsAuth && !syncStatus.lastSync && (
-        <Alert>
-          <BarChart3 aria-hidden="true" className="h-4 w-4" />
-          <AlertDescription>
-            Choose your sample size and sync your liked videos to generate analytics for categories, keywords, channels, and viewing patterns.
-          </AlertDescription>
-        </Alert>
+        <div className="editorial-note rounded-lg border border-border/70 bg-paper p-4">
+          <div className="flex items-start gap-2">
+            <BarChart3 aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Choose your sample size and sync your liked videos to generate analytics for categories, keywords, channels, and viewing patterns.
+            </p>
+          </div>
+        </div>
       )}
     </section>
   );
