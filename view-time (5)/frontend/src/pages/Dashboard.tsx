@@ -67,7 +67,7 @@ export default function Dashboard() {
             <img src="/logo.png" alt="MirrorYourself Logo" className="h-8 w-8 mr-2" />
             <span className="text-xl font-display font-bold text-foreground">MirrorYourself</span>
           </Link>
-          <UserProfile />
+          <UserProfile className="hidden sm:flex" />
         </div>
       </header>
 
