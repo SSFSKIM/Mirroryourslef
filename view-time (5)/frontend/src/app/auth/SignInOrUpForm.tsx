@@ -99,22 +99,24 @@ export const SignInOrUpForm = (props: Props) => {
     : undefined;
 
   return (
-    <StyledFirebaseAuth
-      firebaseAuth={firebaseAuth}
-      uiConfig={{
-        signInFlow: "popup",
-        autoUpgradeAnonymousUsers: true,
-        signInOptions,
-        signInSuccessUrl,
-        siteName: config.siteName,
-        callbacks: {
-          signInFailure: (error) => {
-            throw error;
+    <div className="[&_.firebaseui-card-content]:!shadow-none [&_.firebaseui-container]:!bg-transparent [&_.firebaseui-card-header]:!p-0 [&_.firebaseui-card-content]:!p-0 [&_.firebaseui-card-actions]:!p-0">
+      <StyledFirebaseAuth
+        firebaseAuth={firebaseAuth}
+        uiConfig={{
+          signInFlow: "popup",
+          autoUpgradeAnonymousUsers: true,
+          signInOptions,
+          signInSuccessUrl,
+          siteName: config.siteName,
+          callbacks: {
+            signInFailure: (error) => {
+              throw error;
+            },
           },
-        },
-        privacyPolicyUrl: openPrivacyPolicyUrl,
-        tosUrl: openTosUrl,
-      }}
-    />
+          privacyPolicyUrl: openPrivacyPolicyUrl,
+          tosUrl: openTosUrl,
+        }}
+      />
+    </div>
   );
 };
