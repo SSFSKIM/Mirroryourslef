@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-30
 **Status:** Approved
-**Scope:** `view-time (5)/frontend/src/index.css`, `view-time (5)/frontend/src/pages/App.tsx`, `view-time (5)/frontend/src/pages/Login.tsx`, `view-time (5)/frontend/src/pages/Dashboard.tsx`, shared frontend presentation components used by landing, login, and dashboard modules
+**Scope:** `view-time (5)/frontend/src/index.css`, `view-time (5)/frontend/src/AppWrapper.tsx`, `view-time (5)/frontend/src/constants/default-theme.ts`, `view-time (5)/frontend/src/internal-components/ThemeProvider.tsx`, `view-time (5)/frontend/src/pages/App.tsx`, `view-time (5)/frontend/src/pages/Login.tsx`, `view-time (5)/frontend/src/pages/Dashboard.tsx`, shared frontend presentation components used by landing, login, and dashboard modules
 
 ## Problem
 
@@ -105,6 +105,10 @@ The dashboard should feel like reading the latest issue while remaining fast to 
 - The page rhythm should alternate between compact statistic rails and larger feature panels.
 - Major insights should be visually staged; not every module should be rendered as an equal-weight card.
 
+#### Identifier rule
+
+These editorial names are **display labels only** for the initial redesign pass. Existing internal tab values, route structure, store keys, and backend request parameters remain unchanged unless a later dedicated refactor explicitly changes them.
+
 ### Shared Module Language
 
 - Stats become editorial stat blocks
@@ -114,11 +118,47 @@ The dashboard should feel like reading the latest issue while remaining fast to 
 - Keyword display becomes indexed term clusters rather than SaaS pills
 - Profile/header UI becomes masthead identity rather than a small glass card
 
+### State Handling
+
+The editorial system must cover non-happy-path UI states so the redesign remains complete in production use.
+
+#### Loading
+
+- Loading panels use restrained skeleton blocks, placeholder rules, or quiet text placeholders that match the editorial framing
+- Avoid glow, shimmer-heavy, or glass-forward loading treatments
+- Loading copy stays operational and concise
+
+#### Empty / first-run
+
+- Empty states should read like editorial guidance, not dead space
+- They should explain what the user can unlock next on first-run liked-videos and watch-history surfaces
+- Empty states may include a single primary next action, but should avoid oversized marketing CTAs inside the dashboard
+
+#### Error / failure
+
+- Errors use clear contrast and direct language while staying within the editorial system
+- Sync/upload failures keep existing behavior but receive calmer framing than generic destructive alert cards
+- Validation, sync, and upload errors remain inline with the affected module unless current product behavior already requires escalation beyond that module
+
+#### Success / ready
+
+- Success states for sync/upload should feel like report-status confirmation rather than celebratory marketing
+- Completed import/sync surfaces should transition naturally into the editorial summary flow for the relevant section
+
 ## Visual System
 
 ### Palette
 
 The palette should behave like editorial materials.
+
+#### Theme policy
+
+This redesign is a **full user-facing theme replacement** for the active product surfaces in scope. The target experience is light editorial by default on landing, login, and dashboard.
+
+- The implementation target is a light-first system
+- No user-facing dark mode parity is required in this redesign pass
+- If dark tokens remain in the codebase for technical compatibility, they are fallback-only and not part of the design acceptance criteria
+- QA and visual polish are judged against the light editorial experience, not against legacy dark styling
 
 #### Base tokens
 
@@ -139,6 +179,12 @@ Charts may use multiple colors, but the palette must read as printed and deliber
 ### Typography Roles
 
 Typography should define the product voice.
+
+Font decision for this redesign pass:
+
+- Retain the current font stack already in the app as the implementation baseline: `Syne` for display, `Instrument Sans` for body/UI copy, `Instrument Serif` for selective editorial emphasis, and `JetBrains Mono` for numeric/data treatment
+- Reassign those fonts into the new editorial hierarchy rather than opening a separate font-acquisition task
+- Font replacement is out of scope for the initial implementation plan unless a later dedicated design task explicitly changes it
 
 - `Display`: hero headings, mastheads, major section openers
 - `Deck`: short explanatory paragraph under major headings
@@ -208,6 +254,36 @@ Recommended naming:
 - Supporting labels: `Signals`, `Patterns`, `Creators`, `Rhythm`, `Sessions`, `Influence`, `Timing`, `Repetition`
 - Nudge area: `Editorial Notes` or `What Stands Out`
 
+### Responsive Rules
+
+The redesign must preserve usability on smaller screens without inventing a separate mobile product.
+
+#### Global breakpoints
+
+- `<640px`: single-column, stacked reading flow
+- `640px-1023px`: compact editorial layout with selective two-column groupings only where charts remain legible
+- `>=1024px`: full structured editorial compositions with dominant modules and asymmetric emphasis
+
+#### Landing behavior
+
+- Hero content remains centered or slightly offset, but all major sections collapse to one column below `1024px`
+- Spread-like story sections become vertically stacked text-first modules on small screens
+- Any decorative anchor visual must move below or behind the copy if it competes with readability on mobile
+
+#### Login behavior
+
+- The two-region login composition is desktop/tablet only
+- Below `1024px`, login collapses to a single-column stack with framing copy above the sign-in action
+- Privacy/supporting text must remain visible without requiring lateral scrolling or visual overlap
+
+#### Dashboard behavior
+
+- Masthead summary band becomes a vertical stack below `1024px`
+- Dominant feature modules collapse to full-width single-column panels below `1024px`
+- Supporting sidebars collapse beneath the dominant module in priority order
+- Metric rails may compress to 2-up or 1-up depending on readability; no metric row may require horizontal scrolling
+- Chart captions remain visible and attached to their charts at all breakpoints
+
 ## Component Translation
 
 This defines the unit boundaries for implementation planning.
@@ -226,6 +302,9 @@ Responsibility:
 Primary files:
 
 - `view-time (5)/frontend/src/index.css`
+- `view-time (5)/frontend/src/AppWrapper.tsx`
+- `view-time (5)/frontend/src/constants/default-theme.ts`
+- `view-time (5)/frontend/src/internal-components/ThemeProvider.tsx`
 - shared button and primitive wrappers used across pages
 
 ### Public Page Shell
@@ -243,6 +322,15 @@ Primary files:
 - `view-time (5)/frontend/src/pages/App.tsx`
 - `view-time (5)/frontend/src/pages/Login.tsx`
 
+Component inventory:
+
+- `Button`: visual treatment update allowed; interaction semantics unchanged
+- `AuthSection`: header placement/copy/styling changes allowed; auth behavior unchanged
+- `AnimatedPage`: motion tuning allowed; route/page semantics unchanged
+- `SignInOrUpForm`: presentational restyling, spacing, and wrapper restructuring allowed inside the login page composition; auth provider behavior and submission flow unchanged
+- `GlassCard`: may be retired, replaced, or narrowed to a rare accent role
+- `Atmosphere`: may be removed or repurposed as restrained editorial texture
+
 ### Dashboard Shell
 
 Responsibility:
@@ -258,6 +346,13 @@ Primary files:
 
 - `view-time (5)/frontend/src/pages/Dashboard.tsx`
 
+Component inventory:
+
+- `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`: visual and copy changes allowed; internal values remain `liked-videos` and `watch-history`
+- `UserProfile`: may be restyled into masthead identity strip; auth/user data behavior unchanged
+- section wrappers and headings inside `Dashboard.tsx`: free to restructure for hierarchy and editorial rhythm
+- layout grouping of existing analytics modules: free to change without altering their data contracts
+
 ### Shared Module Presentation
 
 Responsibility:
@@ -269,9 +364,45 @@ Responsibility:
 - chart wrappers and captions
 - profile strip styling
 
+Inclusion rule:
+
+- All visible presentation components imported directly by `App.tsx`, `Login.tsx`, and `Dashboard.tsx`
+- Their direct presentation children when those children define visible panels, charts, stat blocks, or section-level framing
+- Excludes stores, auth internals, API clients, router setup, and backend-facing logic modules
+
 Primary files:
 
-- current analytics-facing display components already used by dashboard sections
+- `view-time (5)/frontend/src/components/YouTubeSyncButton.tsx`
+- `view-time (5)/frontend/src/components/LikedVideosStats.tsx`
+- `view-time (5)/frontend/src/components/ShortsVsRegularChart.tsx`
+- `view-time (5)/frontend/src/components/TopKeywords.tsx`
+- `view-time (5)/frontend/src/components/VideoLengthDistribution.tsx`
+- `view-time (5)/frontend/src/components/TopChannels.tsx`
+- `view-time (5)/frontend/src/components/LikesTimeHeatmap.tsx`
+- `view-time (5)/frontend/src/components/MonthlyTrendsChart.tsx`
+- `view-time (5)/frontend/src/components/ChannelLoyaltyInsight.tsx`
+- `view-time (5)/frontend/src/components/CategoryDistribution.tsx`
+- `view-time (5)/frontend/src/components/ShortsCircularProgress.tsx`
+- `view-time (5)/frontend/src/components/WatchHistoryUploadCard.tsx`
+- `view-time (5)/frontend/src/components/WatchHistoryHighlights.tsx`
+- `view-time (5)/frontend/src/components/ViewingHeatmap.tsx`
+- `view-time (5)/frontend/src/components/RepeatWatchList.tsx`
+- `view-time (5)/frontend/src/components/InAppNudges.tsx`
+- `view-time (5)/frontend/src/components/RecommendationBreakdown.tsx`
+- `view-time (5)/frontend/src/components/SessionDurationChart.tsx`
+- `view-time (5)/frontend/src/components/UserProfile.tsx`
+- `view-time (5)/frontend/src/components/StatCard.tsx`
+
+Component inventory:
+
+- `YouTubeSyncButton`: visual/layout/copy changes allowed; sync behavior, OAuth flow, and request logic unchanged
+- `WatchHistoryUploadCard`: visual/layout/copy changes allowed; upload, validation, delete, and progress behavior unchanged
+- `LikedVideosStats`: visual hierarchy changes allowed; metric calculation behavior unchanged
+- `WatchHistoryHighlights`: visual hierarchy changes allowed; metric calculation behavior unchanged
+- `TopKeywords`: visual treatment may move from badge cluster to indexed term layout; loading/data behavior unchanged
+- `InAppNudges`: visual treatment and editorial framing changes allowed; heuristic logic unchanged
+- `MonthlyTrendsChart`, `ViewingHeatmap`, `LikesTimeHeatmap`, `SessionDurationChart`, `RecommendationBreakdown`, `CategoryDistribution`, `ShortsVsRegularChart`, `VideoLengthDistribution`, `TopChannels`, `ChannelLoyaltyInsight`, `ShortsCircularProgress`, `RepeatWatchList`: chart framing, captions, placement, and emphasis may change; data contracts and chart inputs unchanged
+- shared stat/panel wrappers such as `StatCard`: may be restyled or replaced at the presentation layer
 
 ## Implementation Boundaries
 
@@ -282,6 +413,15 @@ Primary files:
 - Public page composition
 - Dashboard composition
 - Shared presentation components that visibly define the product aesthetic
+- Copy adjustments needed to support the editorial framing
+
+### Behavior Boundary
+
+Some in-scope components contain user actions or data-loading concerns. For this redesign pass, behavior changes are constrained as follows:
+
+- Allowed: markup restructuring, visual hierarchy, labels, helper copy, captioning, spacing, responsive ordering, and non-functional motion
+- Not allowed: changes to auth flows, upload/sync logic, API contracts, store shapes, request timing, analytics computation, or deletion semantics
+- If a presentational redesign requires splitting a mixed component into shell plus content, that refactor is allowed only when behavior remains functionally identical before and after the split
 
 ### Out of Scope
 
@@ -291,6 +431,7 @@ Primary files:
 - Backend route or schema changes
 - New analytics logic
 - New product features
+- Bespoke redesign work for secondary pages such as logout or legal pages; they may inherit updated global tokens, but they are not individually art-directed in this pass
 
 ## Rollout Plan
 
@@ -341,4 +482,3 @@ Translate the highest-impact modules first:
 - The dashboard reads as a personal report while staying analytically efficient
 - High-value insights visually dominate over secondary modules
 - The redesign is memorable without becoming decorative or hard to use
-
